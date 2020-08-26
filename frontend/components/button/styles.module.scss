@@ -1,0 +1,14 @@
+@import "../../shared/variables.scss";
+
+.button {
+    display: inline-block;
+    width: auto;
+    min-width: 5rem;
+    padding: .4rem .5rem;
+    border-radius: .5rem;
+    text-align: center;
+    background: $primary;
+    color: white;
+    font-family: $accent;
+    font-weight: 700;
+}

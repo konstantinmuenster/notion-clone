@@ -1,0 +1,22 @@
+{
+  "name": "notion-clone-frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "next": "^9.5.2",
+    "next-images": "^1.4.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "sass": "^1.26.10",
+    "typeface-nunito-sans": "0.0.72",
+    "typeface-roboto": "0.0.75"
+  }
+}
