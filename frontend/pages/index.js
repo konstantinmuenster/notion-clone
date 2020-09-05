@@ -1,5 +1,11 @@
+import EditablePage from "../components/editablePage";
+
 const IndexPage = () => {
-  return <div>Welcome to Next.js!</div>;
+  return (
+    <div>
+      <EditablePage />
+    </div>
+  );
 };
 
 export default IndexPage;

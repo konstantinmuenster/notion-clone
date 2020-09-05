@@ -1,0 +1,15 @@
+@import "../../shared/variables.scss";
+
+.block {
+    padding: .25rem;
+}
+
+.block:hover {
+    background: #fafafa;
+    outline-color: $tertiary;
+}
+
+.block:focus {
+    background: $tertiary;
+    outline-color: $tertiary;
+}
