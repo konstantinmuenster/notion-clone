@@ -44,6 +44,7 @@ const postPage = (req, res, next) => {
       res.status(201).json({
         message: "Created page successfully.",
         pageId: page._id,
+        blocks: blocks,
       });
     })
     .catch((err) => {

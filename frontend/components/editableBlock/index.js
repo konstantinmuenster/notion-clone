@@ -7,39 +7,78 @@ import { setCaretPosition, getSelectionPositions } from "../../utils";
 
 // library does not work with hooks
 class EditableBlock extends React.Component {
-  state = {
-    html: "",
-    tag: "p",
-    disabled: false,
-    placeholder: false,
-    previousKey: null,
-    isTyping: false,
-    tagSelectorMenuOpen: false,
-    actionMenuOpen: false,
-  };
-
+  
   constructor(props) {
     super(props);
+    this.handleChange = this.handleChange.bind(this);
+    this.handleFocus = this.handleFocus.bind(this);
+    this.handleBlur = this.handleBlur.bind(this);
+    this.handleKeyDown = this.handleKeyDown.bind(this);
+    this.handleMouseUp = this.handleMouseUp.bind(this);
+    this.openActionMenu = this.openActionMenu.bind(this);
+    this.closeActionMenu = this.closeActionMenu.bind(this);
+    this.openTagSelectorMenu = this.openTagSelectorMenu.bind(this);
+    this.closeTagSelectorMenu = this.closeTagSelectorMenu.bind(this);
+    this.handleTagSelection = this.handleTagSelection.bind(this);
+    this.addPlaceholder = this.addPlaceholder.bind(this);
     this.contentEditable = React.createRef();
+    this.state = {
+      html: "",
+      tag: "p",
+      placeholder: false,
+      previousKey: null,
+      isTyping: false,
+      tagSelectorMenuOpen: false,
+      actionMenuOpen: false,
+    };
   }
 
-  componentDidMount = () => {
-    // Show a placeholder for blank pages
-    if (this.props.position === 1 && !this.state.html) {
+  // To avoid unnecessary API calls, the block component fully owns the draft state
+  // i.e. while editing we only update the block component, only when the user
+  // finished editing (e.g. switched to next block), we update the page as well
+  // https://reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html
+
+  componentDidMount() {
+    const isPlaceholderAdded = this.addPlaceholder(
+      this.props.position,
+      this.props.html,
+      this.contentEditable.current
+    );
+    if (!isPlaceholderAdded) {
       this.setState({
         ...this.state,
-        html: "Type a page title...",
-        tag: "h1",
-        placeholder: true,
+        html: this.props.html,
+        tag: this.props.tag,
       });
     }
-  };
+  }
 
-  handleChange = (e) => {
+  componentDidUpdate(prevProps, prevState) {
+    // if the user stopped editing and we have some content, we compare it to
+    // the content we received via props. If it has changed, we update the page
+    if (prevState.isTyping && !this.state.isTyping && !this.state.placeholder) {
+      const htmlChanged = this.props.html !== this.state.html;
+      const tagChanged = this.props.tag !== this.state.tag;
+      if (htmlChanged || tagChanged) {
+        this.props.updateBlock({
+          id: this.props.id,
+          html: this.state.html,
+          tag: this.state.tag,
+        });
+      }
+    }
+  }
+
+  componentWillUnmount() {
+    // In case, the user deleted the block, we need to cleanup all listeners
+    document.removeEventListener("click", this.closeActionMenu, false);
+  }
+
+  handleChange(e) {
     this.setState({ ...this.state, html: e.target.value });
-  };
+  }
 
-  handleFocus = (e) => {
+  handleFocus(e) {
     if (this.state.placeholder) {
       this.setState({
         ...this.state,
@@ -50,27 +89,21 @@ class EditableBlock extends React.Component {
     } else {
       this.setState({ ...this.state, isTyping: true });
     }
-  };
+  }
 
-  handleBlur = (e) => {
+  handleBlur(e) {
     // Show placeholder if block is still the only one and empty
-    if (
-      this.props.position === 1 &&
-      !this.state.html &&
-      !e.target.nextElementSibling
-    ) {
-      this.setState({
-        ...this.state,
-        html: "Type something...",
-        placeholder: true,
-        isTyping: false,
-      });
-    } else {
+    const isPlaceholderAdded = this.addPlaceholder(
+      this.props.position,
+      this.state.html,
+      this.contentEditable.current
+    );
+    if (!isPlaceholderAdded) {
       this.setState({ ...this.state, isTyping: false });
     }
-  };
+  }
 
-  handleKeyDown = (e) => {
+  handleKeyDown(e) {
     if (e.key === "/") {
       this.openTagSelectorMenu();
     } else if (
@@ -82,49 +115,53 @@ class EditableBlock extends React.Component {
       // Only the Shift-Enter-combination should add a new paragraph
       // as the default Enter behaviour
       e.preventDefault();
-      this.props.addNewBlock(e);
+      this.props.addBlock({
+        id: this.props.id,
+        ref: this.contentEditable.current,
+      });
     }
     // We need the previousKey to detect a Shift-Enter-combination
     this.setState({ previousKey: e.key });
-  };
+  }
 
-  handleMouseUp = (e) => {
+  handleMouseUp(e) {
     const blockEl = this.contentEditable.current;
     const { selectionStart, selectionEnd } = getSelectionPositions(blockEl);
     if (selectionStart !== selectionEnd) {
       this.openActionMenu();
     }
-  };
+  }
 
-  openActionMenu = () => {
+  openActionMenu() {
     this.setState({ ...this.state, actionMenuOpen: true });
     // Add listener asynchronously to avoid conflicts with
     // the double click of the text selection
     setTimeout(() => {
       document.addEventListener("click", this.closeActionMenu, false);
     }, 100);
-  };
+  }
 
-  closeActionMenu = () => {
+  closeActionMenu() {
     this.setState({ ...this.state, actionMenuOpen: false });
     document.removeEventListener("click", this.closeActionMenu, false);
-  };
+  }
 
-  openTagSelectorMenu = () => {
+  openTagSelectorMenu() {
     this.setState({ ...this.state, tagSelectorMenuOpen: true });
     document.addEventListener("click", this.closeTagSelectorMenu, false);
-  };
+  }
 
-  closeTagSelectorMenu = () => {
+  closeTagSelectorMenu() {
     this.setState({ ...this.state, tagSelectorMenuOpen: false });
     document.removeEventListener("click", this.closeTagSelectorMenu, false);
-  };
+  }
 
-  handleTagSelection = (tag) => {
+  handleTagSelection(tag) {
     if (this.state.isTyping) {
       // Identifying the command position is a bit harder since an html tag
       // like </h2> is also a valid syntax for a command. Therefore, we have
       // to look for anything like /h2 which is not an html tag
+      // Not perfect... anyways
       const slashPosition = /(?![^<]*>)\/+[a-z0-9]*/gm.exec(this.state.html);
       const htmlWithoutCmd = this.state.html.substring(0, slashPosition.index);
       this.setState(
@@ -145,9 +182,27 @@ class EditableBlock extends React.Component {
         this.closeTagSelectorMenu();
       });
     }
-  };
+  }
 
-  render = () => {
+  // Show a placeholder for blank pages
+  addPlaceholder(pos, html, ref) {
+    const isFirstBlockWithoutHtml = pos === 1 && !html;
+    const isFirstBlockWithoutSibling = !ref.nextElementSibling;
+    if (isFirstBlockWithoutHtml && isFirstBlockWithoutSibling) {
+      this.setState({
+        ...this.state,
+        html: "Type a page title...",
+        tag: "h1",
+        placeholder: true,
+        isTyping: false,
+      });
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  render() {
     return (
       <>
         {this.state.tagSelectorMenuOpen && (
@@ -161,7 +216,7 @@ class EditableBlock extends React.Component {
           <ActionMenu
             parent={this.contentEditable.current}
             actions={{
-              deleteBlock: () => this.props.deleteBlock(this.props.id),
+              deleteBlock: () => this.props.deleteBlock({ id: this.props.id }),
               turnInto: this.openTagSelectorMenu,
             }}
           />
@@ -169,8 +224,8 @@ class EditableBlock extends React.Component {
         <ContentEditable
           innerRef={this.contentEditable}
           data-id={this.props.id}
+          data-position={this.props.position}
           html={this.state.html}
-          disabled={this.state.disabled}
           onChange={this.handleChange}
           onFocus={this.handleFocus}
           onBlur={this.handleBlur}
@@ -184,7 +239,7 @@ class EditableBlock extends React.Component {
         />
       </>
     );
-  };
+  }
 }
 
 export default EditableBlock;

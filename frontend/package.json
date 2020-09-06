@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start"
   },
-  "author": "",
+  "author": "Konstantin Münster",
   "license": "ISC",
   "dependencies": {
     "match-sorter": "^4.2.0",
@@ -19,7 +19,6 @@
     "react-dom": "^16.13.1",
     "sass": "^1.26.10",
     "typeface-nunito-sans": "0.0.72",
-    "typeface-roboto": "0.0.75",
-    "uid": "^1.0.0"
+    "typeface-roboto": "0.0.75"
   }
 }

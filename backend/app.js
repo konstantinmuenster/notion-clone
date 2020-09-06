@@ -5,24 +5,22 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const pagesRoutes = require("./routes/pages");
-const blocksRoutes = require("./routes/blocks");
 
 const app = express();
 
 app.use(bodyParser.json());
-// app.use((req, res, next) => {
-//   res.setHeader("Access-Control-Allow-Origin", "*");
-//   res.setHeader(
-//     "Access-Control-Allow-Methods",
-//     "OPTIONS, GET, POST, PUT, PATCH, DELETE"
-//   );
-//   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-//   next();
-// });
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "OPTIONS, GET, POST, PUT, PATCH, DELETE"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
 
 // Routes
 app.use("/pages", pagesRoutes);
-app.use("/blocks", blocksRoutes);
 
 // Error Handling
 app.use((err, req, res, next) => {

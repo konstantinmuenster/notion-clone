@@ -5,9 +5,14 @@ const pageSchema = new Schema(
   {
     blocks: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "Block",
-        require: true,
+        tag: {
+          type: String,
+          required: true,
+        },
+        html: {
+          type: String,
+          required: false,
+        },
       },
     ],
     // creator: {
