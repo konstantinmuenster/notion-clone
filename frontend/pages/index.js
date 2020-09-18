@@ -13,7 +13,7 @@ export const getServerSideProps = async (context) => {
   const blocks = [{ tag: "p", html: "" }];
   if (res && blocks) {
     try {
-      const response = await fetch(`${process.env.API}/pages`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/pages`, {
         method: "POST",
         headers: {
           Accept: "application/json",

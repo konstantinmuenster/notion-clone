@@ -1,19 +1,22 @@
 import ContentEditable from "react-contenteditable";
+import { Draggable } from "react-beautiful-dnd";
 
 import styles from "./styles.module.scss";
 import TagSelectorMenu from "../tagSelectorMenu";
 import ActionMenu from "../actionMenu";
 import { setCaretPosition, getSelectionPositions } from "../../utils";
+import DragHandleIcon from "../../images/draggable.svg";
 
 // library does not work with hooks
 class EditableBlock extends React.Component {
-  
   constructor(props) {
     super(props);
     this.handleChange = this.handleChange.bind(this);
     this.handleFocus = this.handleFocus.bind(this);
     this.handleBlur = this.handleBlur.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
+    this.handleMouseEnter = this.handleMouseEnter.bind(this);
+    this.handleMouseLeave = this.handleMouseLeave.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
     this.openActionMenu = this.openActionMenu.bind(this);
     this.closeActionMenu = this.closeActionMenu.bind(this);
@@ -30,6 +33,7 @@ class EditableBlock extends React.Component {
       isTyping: false,
       tagSelectorMenuOpen: false,
       actionMenuOpen: false,
+      blockHovering: false,
     };
   }
 
@@ -117,6 +121,8 @@ class EditableBlock extends React.Component {
       e.preventDefault();
       this.props.addBlock({
         id: this.props.id,
+        html: this.state.html,
+        tag: this.state.tag,
         ref: this.contentEditable.current,
       });
     }
@@ -124,12 +130,20 @@ class EditableBlock extends React.Component {
     this.setState({ previousKey: e.key });
   }
 
-  handleMouseUp(e) {
+  handleMouseUp() {
     const blockEl = this.contentEditable.current;
     const { selectionStart, selectionEnd } = getSelectionPositions(blockEl);
     if (selectionStart !== selectionEnd) {
       this.openActionMenu();
     }
+  }
+
+  handleMouseEnter() {
+    this.setState({ ...this.state, blockHovering: true });
+  }
+
+  handleMouseLeave() {
+    this.setState({ ...this.state, blockHovering: false });
   }
 
   openActionMenu() {
@@ -187,7 +201,7 @@ class EditableBlock extends React.Component {
   // Show a placeholder for blank pages
   addPlaceholder(pos, html, ref) {
     const isFirstBlockWithoutHtml = pos === 1 && !html;
-    const isFirstBlockWithoutSibling = !ref.nextElementSibling;
+    const isFirstBlockWithoutSibling = !ref.parentElement.nextElementSibling;
     if (isFirstBlockWithoutHtml && isFirstBlockWithoutSibling) {
       this.setState({
         ...this.state,
@@ -221,22 +235,45 @@ class EditableBlock extends React.Component {
             }}
           />
         )}
-        <ContentEditable
-          innerRef={this.contentEditable}
-          data-id={this.props.id}
-          data-position={this.props.position}
-          html={this.state.html}
-          onChange={this.handleChange}
-          onFocus={this.handleFocus}
-          onBlur={this.handleBlur}
-          onKeyDown={this.handleKeyDown}
-          onMouseUp={this.handleMouseUp}
-          tagName={this.state.tag}
-          className={styles.block}
-          style={
-            this.state.placeholder ? { color: "rgba(72,72,72,.25)" } : null
-          }
-        />
+        <Draggable draggableId={this.props.id} index={this.props.position}>
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              className={styles.draggable}
+              onMouseEnter={this.handleMouseEnter}
+              onMouseLeave={this.handleMouseLeave}
+              {...provided.draggableProps}
+            >
+              <ContentEditable
+                innerRef={this.contentEditable}
+                data-position={this.props.position}
+                html={this.state.html}
+                onChange={this.handleChange}
+                onFocus={this.handleFocus}
+                onBlur={this.handleBlur}
+                onKeyDown={this.handleKeyDown}
+                tagName={this.state.tag}
+                className={[
+                  styles.block,
+                  this.state.blockHovering ? styles.blockHovering : null,
+                  this.state.placeholder ? styles.placeholder : null,
+                  snapshot.isDragging ? styles.isDragging : null,
+                ].join(" ")}
+              />
+              <span
+                role="button"
+                tabIndex="0"
+                className={styles.dragHandle}
+                style={
+                  this.state.blockHovering ? { opacity: 1 } : { opacity: 0 }
+                }
+                {...provided.dragHandleProps}
+              >
+                <img src={DragHandleIcon} alt="Icon" />
+              </span>
+            </div>
+          )}
+        </Draggable>
       </>
     );
   }

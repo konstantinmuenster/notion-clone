@@ -15,6 +15,7 @@
     "next": "^9.5.2",
     "next-images": "^1.4.1",
     "react": "^16.13.1",
+    "react-beautiful-dnd": "^13.0.0",
     "react-contenteditable": "^3.3.5",
     "react-dom": "^16.13.1",
     "sass": "^1.26.10",

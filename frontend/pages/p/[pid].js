@@ -1,3 +1,5 @@
+import { resetServerContext } from "react-beautiful-dnd";
+
 import EditablePage from "../../components/editablePage/index";
 
 const Page = ({ pid, blocks, fetchError }) => {
@@ -5,9 +7,12 @@ const Page = ({ pid, blocks, fetchError }) => {
 };
 
 export const getServerSideProps = async (context) => {
+  resetServerContext(); // needed for drag and drop functionality
   const pageId = context.query.pid;
   try {
-    const response = await fetch(`${process.env.API}/pages/${pageId}`);
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API}/pages/${pageId}`
+    );
     const data = await response.json();
     return {
       props: { blocks: data.page.blocks, pid: pageId, fetchError: false },
