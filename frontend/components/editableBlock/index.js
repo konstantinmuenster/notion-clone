@@ -252,6 +252,7 @@ class EditableBlock extends React.Component {
                 onFocus={this.handleFocus}
                 onBlur={this.handleBlur}
                 onKeyDown={this.handleKeyDown}
+                onMouseUp={this.handleMouseUp}
                 tagName={this.state.tag}
                 className={[
                   styles.block,
