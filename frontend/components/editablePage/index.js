@@ -3,7 +3,7 @@ import { DragDropContext, Droppable } from "react-beautiful-dnd";
 
 import EditableBlock from "../editableBlock";
 import { usePrevious } from "../../hooks";
-import { objectId } from "../../utils";
+import { objectId, setCaretPosition } from "../../utils";
 
 // A page is represented by an array containing several blocks
 // [
@@ -23,7 +23,7 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
   if (err) return <h1>Something went wrong.</h1>;
 
   const [blocks, setBlocks] = useState(fetchedBlocks);
-  const [currentBlockRef, setCurrentBlockRef] = useState(null);
+  const [currentBlockId, setCurrentBlockId] = useState(null);
 
   const prevBlocks = usePrevious(blocks);
 
@@ -54,16 +54,29 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
     }
   }, [blocks, prevBlocks]);
 
-  // Focus new block if it was added
+  // Handling the cursor and focus on adding and deleting blocks
   useEffect(() => {
+    // If a new block was added, move the caret to it
     if (prevBlocks && prevBlocks.length + 1 === blocks.length) {
-      const nextBlock =
-        currentBlockRef.parentElement.nextElementSibling.firstElementChild;
-      if (nextBlock.isContentEditable) {
-        nextBlock.focus();
-      }
+      const nextBlockPosition =
+        blocks.map((b) => b._id).indexOf(currentBlockId) + 1 + 1;
+      const nextBlock = document.querySelector(
+        `[data-position="${nextBlockPosition}"]`
+      );
+      nextBlock.focus();
     }
-  }, [currentBlockRef]);
+    // If a block was deleted, move the caret to the end of the last block
+    if (prevBlocks && prevBlocks.length - 1 === blocks.length) {
+      const lastBlockPosition = prevBlocks
+        .map((b) => b._id)
+        .indexOf(currentBlockId);
+      const lastBlock = document.querySelector(
+        `[data-position="${lastBlockPosition}"]`
+      );
+      setCaretPosition(lastBlock);
+      lastBlock.focus();
+    }
+  }, [blocks, prevBlocks, currentBlockId]);
 
   const updateBlockHandler = (currentBlock) => {
     const index = blocks.map((b) => b._id).indexOf(currentBlock.id);
@@ -77,7 +90,7 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
   };
 
   const addBlockHandler = (currentBlock) => {
-    setCurrentBlockRef(currentBlock.ref);
+    setCurrentBlockId(currentBlock.id);
     const index = blocks.map((b) => b._id).indexOf(currentBlock.id);
     const updatedBlocks = [...blocks];
     const newBlock = { _id: objectId(), tag: "p", html: "" };
@@ -91,6 +104,7 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
   };
 
   const deleteBlockHandler = (currentBlock) => {
+    setCurrentBlockId(currentBlock.id);
     const index = blocks.map((b) => b._id).indexOf(currentBlock.id);
     const updatedBlocks = [...blocks];
     updatedBlocks.splice(index, 1);

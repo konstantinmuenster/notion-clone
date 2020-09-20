@@ -110,6 +110,8 @@ class EditableBlock extends React.Component {
   handleKeyDown(e) {
     if (e.key === "/") {
       this.openTagSelectorMenu();
+    } else if (e.key === "Backspace" && !this.state.html) {
+      this.props.deleteBlock({ id: this.props.id });
     } else if (
       e.key === "Enter" &&
       this.state.previousKey !== "Shift" &&
