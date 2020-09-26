@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import matchSorter from "match-sorter";
 
-import { getCaretCoordinates, getSelectionPositions } from "../../utils";
 import styles from "./styles.module.scss";
 
 const MENU_HEIGHT = 150;
@@ -26,17 +25,25 @@ const allowedTags = [
     tag: "p",
     label: "Paragraph",
   },
+  {
+    id: "image",
+    tag: "img",
+    label: "Image",
+  },
 ];
 
-const TagSelectorMenu = ({ parent, closeMenu, handleSelection }) => {
+const TagSelectorMenu = ({ position, closeMenu, handleSelection }) => {
   const [tagList, setTagList] = useState(allowedTags);
   const [selectedTag, setSelectedTag] = useState(0);
-  const [position, setPosition] = useState({ x: 0, y: 0, aboveBlock: true });
   const [command, setCommand] = useState("");
 
-  useEffect(() => {
-    calculateMenuPosition(parent);
-  }, [parent]);
+  // If the tag selector menu is display outside the top viewport,
+  // we display it below the block
+  const isMenuOutsideOfTopViewport = position.y - MENU_HEIGHT < 0;
+  const y = !isMenuOutsideOfTopViewport
+    ? position.y - MENU_HEIGHT
+    : position.y + MENU_HEIGHT / 3;
+  const x = position.x;
 
   // Filter tagList based on given command
   useEffect(() => {
@@ -75,31 +82,13 @@ const TagSelectorMenu = ({ parent, closeMenu, handleSelection }) => {
     };
   }, [tagList, selectedTag]);
 
-  const calculateMenuPosition = (ref) => {
-    const { selectionEnd } = getSelectionPositions(ref);
-    const { x: caretX, y: caretY } = getCaretCoordinates(ref, selectionEnd);
-
-    // If the menu runs out of the top viewport, we place it
-    // below the block
-    const isMenuOutsideOfTopViewport = caretY - MENU_HEIGHT < 0;
-    const modifiedY = !isMenuOutsideOfTopViewport
-      ? caretY - MENU_HEIGHT
-      : caretY + MENU_HEIGHT / 3;
-
-    setPosition({
-      x: caretX,
-      y: modifiedY,
-      aboveBlock: !isMenuOutsideOfTopViewport,
-    });
-  };
-
   return (
     <div
       className={styles.menuWrapper}
       style={{
-        top: position.y,
-        left: position.x,
-        justifyContent: position.aboveBlock ? "flex-end" : "flex-start",
+        top: y,
+        left: x,
+        justifyContent: !isMenuOutsideOfTopViewport ? "flex-end" : "flex-start",
       }}
     >
       <div className={styles.menu}>

@@ -4,8 +4,12 @@ import { Draggable } from "react-beautiful-dnd";
 import styles from "./styles.module.scss";
 import TagSelectorMenu from "../tagSelectorMenu";
 import ActionMenu from "../actionMenu";
-import { setCaretPosition, getSelectionPositions } from "../../utils";
 import DragHandleIcon from "../../images/draggable.svg";
+import {
+  setCaretPosition,
+  getSelectionPositions,
+  getCaretCoordinates,
+} from "../../utils";
 
 // library does not work with hooks
 class EditableBlock extends React.Component {
@@ -15,25 +19,40 @@ class EditableBlock extends React.Component {
     this.handleFocus = this.handleFocus.bind(this);
     this.handleBlur = this.handleBlur.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
-    this.handleMouseEnter = this.handleMouseEnter.bind(this);
-    this.handleMouseLeave = this.handleMouseLeave.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
+    this.handleDragHandleClick = this.handleDragHandleClick.bind(this);
     this.openActionMenu = this.openActionMenu.bind(this);
     this.closeActionMenu = this.closeActionMenu.bind(this);
     this.openTagSelectorMenu = this.openTagSelectorMenu.bind(this);
     this.closeTagSelectorMenu = this.closeTagSelectorMenu.bind(this);
     this.handleTagSelection = this.handleTagSelection.bind(this);
+    this.handleImageUpload = this.handleImageUpload.bind(this);
     this.addPlaceholder = this.addPlaceholder.bind(this);
+    this.calculateActionMenuPosition = this.calculateActionMenuPosition.bind(
+      this
+    );
+    this.calculateTagSelectorMenuPosition = this.calculateTagSelectorMenuPosition.bind(
+      this
+    );
     this.contentEditable = React.createRef();
+    this.fileInput = null;
     this.state = {
       html: "",
       tag: "p",
+      imageUrl: "",
       placeholder: false,
       previousKey: null,
       isTyping: false,
       tagSelectorMenuOpen: false,
+      tagSelectorMenuPosition: {
+        x: null,
+        y: null,
+      },
       actionMenuOpen: false,
-      blockHovering: false,
+      actionMenuPosition: {
+        x: null,
+        y: null,
+      },
     };
   }
 
@@ -43,33 +62,42 @@ class EditableBlock extends React.Component {
   // https://reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html
 
   componentDidMount() {
-    const isPlaceholderAdded = this.addPlaceholder(
-      this.props.position,
-      this.props.html,
-      this.contentEditable.current
-    );
-    if (!isPlaceholderAdded) {
+    // Add a placeholder if the first block has no sibling elements and no content
+    const hasPlaceholder = this.addPlaceholder({
+      block: this.contentEditable.current,
+      position: this.props.position,
+      content: this.props.html || this.props.imageUrl,
+    });
+    if (!hasPlaceholder) {
       this.setState({
         ...this.state,
         html: this.props.html,
         tag: this.props.tag,
+        imageUrl: this.props.imageUrl,
       });
     }
   }
 
   componentDidUpdate(prevProps, prevState) {
-    // if the user stopped editing and we have some content, we compare it to
-    // the content we received via props. If it has changed, we update the page
-    if (prevState.isTyping && !this.state.isTyping && !this.state.placeholder) {
-      const htmlChanged = this.props.html !== this.state.html;
-      const tagChanged = this.props.tag !== this.state.tag;
-      if (htmlChanged || tagChanged) {
-        this.props.updateBlock({
-          id: this.props.id,
-          html: this.state.html,
-          tag: this.state.tag,
-        });
-      }
+    // update the page on the server if one of the following is true
+    // 1. user stopped typing and the html content has changed & no placeholder set
+    // 2. user changed the tag & no placeholder set
+    // 3. user changed the image & no placeholder set
+    const stoppedTyping = prevState.isTyping && !this.state.isTyping;
+    const hasNoPlaceholder = !this.state.placeholder;
+    const htmlChanged = this.props.html !== this.state.html;
+    const tagChanged = this.props.tag !== this.state.tag;
+    const imageChanged = this.props.imageUrl !== this.state.imageUrl;
+    if (
+      ((stoppedTyping && htmlChanged) || tagChanged || imageChanged) &&
+      hasNoPlaceholder
+    ) {
+      this.props.updateBlock({
+        id: this.props.id,
+        html: this.state.html,
+        tag: this.state.tag,
+        imageUrl: this.state.imageUrl,
+      });
     }
   }
 
@@ -82,7 +110,8 @@ class EditableBlock extends React.Component {
     this.setState({ ...this.state, html: e.target.value });
   }
 
-  handleFocus(e) {
+  handleFocus() {
+    // If a placeholder is set, we remove it when the block gets focused
     if (this.state.placeholder) {
       this.setState({
         ...this.state,
@@ -97,19 +126,19 @@ class EditableBlock extends React.Component {
 
   handleBlur(e) {
     // Show placeholder if block is still the only one and empty
-    const isPlaceholderAdded = this.addPlaceholder(
-      this.props.position,
-      this.state.html,
-      this.contentEditable.current
-    );
-    if (!isPlaceholderAdded) {
+    const hasPlaceholder = this.addPlaceholder({
+      block: this.contentEditable.current,
+      position: this.props.position,
+      content: this.state.html || this.state.imageUrl,
+    });
+    if (!hasPlaceholder) {
       this.setState({ ...this.state, isTyping: false });
     }
   }
 
   handleKeyDown(e) {
     if (e.key === "/") {
-      this.openTagSelectorMenu();
+      this.openTagSelectorMenu("KEY_CMD");
     } else if (e.key === "Backspace" && !this.state.html) {
       this.props.deleteBlock({ id: this.props.id });
     } else if (
@@ -118,13 +147,14 @@ class EditableBlock extends React.Component {
       !this.state.tagSelectorMenuOpen
     ) {
       // If the user presses Enter, we want to add a new block
-      // Only the Shift-Enter-combination should add a new paragraph
-      // as the default Enter behaviour
+      // Only the Shift-Enter-combination should add a new paragraph,
+      // i.e. Shift-Enter acts as the default enter behaviour
       e.preventDefault();
       this.props.addBlock({
         id: this.props.id,
         html: this.state.html,
         tag: this.state.tag,
+        imageUrl: this.state.imageUrl,
         ref: this.contentEditable.current,
       });
     }
@@ -133,23 +163,25 @@ class EditableBlock extends React.Component {
   }
 
   handleMouseUp() {
-    const blockEl = this.contentEditable.current;
-    const { selectionStart, selectionEnd } = getSelectionPositions(blockEl);
+    const block = this.contentEditable.current;
+    const { selectionStart, selectionEnd } = getSelectionPositions(block);
     if (selectionStart !== selectionEnd) {
-      this.openActionMenu();
+      this.openActionMenu(block, "TEXT_SELECTION");
     }
   }
 
-  handleMouseEnter() {
-    this.setState({ ...this.state, blockHovering: true });
+  handleDragHandleClick(e) {
+    const dragHandle = e.target;
+    this.openActionMenu(dragHandle, "DRAG_HANDLE_CLICK");
   }
 
-  handleMouseLeave() {
-    this.setState({ ...this.state, blockHovering: false });
-  }
-
-  openActionMenu() {
-    this.setState({ ...this.state, actionMenuOpen: true });
+  openActionMenu(parent, trigger) {
+    const { x, y } = this.calculateActionMenuPosition(parent, trigger);
+    this.setState({
+      ...this.state,
+      actionMenuPosition: { x: x, y: y },
+      actionMenuOpen: true,
+    });
     // Add listener asynchronously to avoid conflicts with
     // the double click of the text selection
     setTimeout(() => {
@@ -158,57 +190,101 @@ class EditableBlock extends React.Component {
   }
 
   closeActionMenu() {
-    this.setState({ ...this.state, actionMenuOpen: false });
+    this.setState({
+      ...this.state,
+      actionMenuPosition: { x: null, y: null },
+      actionMenuOpen: false,
+    });
     document.removeEventListener("click", this.closeActionMenu, false);
   }
 
-  openTagSelectorMenu() {
-    this.setState({ ...this.state, tagSelectorMenuOpen: true });
+  openTagSelectorMenu(trigger) {
+    const { x, y } = this.calculateTagSelectorMenuPosition(trigger);
+    this.setState({
+      ...this.state,
+      tagSelectorMenuPosition: { x: x, y: y },
+      tagSelectorMenuOpen: true,
+    });
     document.addEventListener("click", this.closeTagSelectorMenu, false);
   }
 
   closeTagSelectorMenu() {
-    this.setState({ ...this.state, tagSelectorMenuOpen: false });
+    this.setState({
+      ...this.state,
+      tagSelectorMenuPosition: { x: null, y: null },
+      tagSelectorMenuOpen: false,
+    });
     document.removeEventListener("click", this.closeTagSelectorMenu, false);
   }
 
+  // Convert editableBlock shape based on the chosen tag
+  // i.e. img = display <div><input /><img /></div> (input picker is hidden)
+  // i.e. every other tag = <ContentEditable /> with its tag and html content
   handleTagSelection(tag) {
-    if (this.state.isTyping) {
-      // Identifying the command position is a bit harder since an html tag
-      // like </h2> is also a valid syntax for a command. Therefore, we have
-      // to look for anything like /h2 which is not an html tag
-      // Not perfect... anyways
-      const slashPosition = /(?![^<]*>)\/+[a-z0-9]*/gm.exec(this.state.html);
-      const htmlWithoutCmd = this.state.html.substring(0, slashPosition.index);
-      this.setState(
-        {
-          ...this.state,
-          tag: tag,
-          html: htmlWithoutCmd,
-        },
-        () => {
-          const blockEl = this.contentEditable.current;
-          setCaretPosition(blockEl);
-          blockEl.focus();
-          this.closeTagSelectorMenu();
-        }
-      );
-    } else {
+    if (tag === "img") {
       this.setState({ ...this.state, tag: tag }, () => {
         this.closeTagSelectorMenu();
+        if (this.fileInput) {
+          // Open the native file picker
+          this.fileInput.click();
+        }
       });
+    } else {
+      if (this.state.isTyping) {
+        // Identifying the command position is a bit harder since an html tag
+        // like </h2> is also a valid syntax for a command. Therefore, we have
+        // to look for anything like /h2 which is not an html tag
+        // Not perfect... anyways
+        const slashPosition = /(?![^<]*>)\/+[a-z0-9]*/gm.exec(this.state.html);
+        const htmlWithoutCmd = this.state.html.substring(
+          0,
+          slashPosition.index
+        );
+        this.setState({ ...this.state, tag: tag, html: htmlWithoutCmd }, () => {
+          setCaretPosition(this.contentEditable.current);
+          this.contentEditable.current.focus();
+          this.closeTagSelectorMenu();
+        });
+      } else {
+        this.setState({ ...this.state, tag: tag }, () => {
+          this.closeTagSelectorMenu();
+        });
+      }
+    }
+  }
+
+  async handleImageUpload() {
+    if (this.fileInput && this.fileInput.files[0]) {
+      const imageFile = this.fileInput.files[0];
+      const formData = new FormData();
+      formData.append("image", imageFile);
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API}/pages/images`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+        const data = await response.json();
+        const imageUrl = data.imageUrl;
+        this.setState({ ...this.state, imageUrl: imageUrl });
+      } catch (err) {
+        console.log(err);
+      }
     }
   }
 
   // Show a placeholder for blank pages
-  addPlaceholder(pos, html, ref) {
-    const isFirstBlockWithoutHtml = pos === 1 && !html;
-    const isFirstBlockWithoutSibling = !ref.parentElement.nextElementSibling;
+  addPlaceholder({ block, position, content }) {
+    const isFirstBlockWithoutHtml = position === 1 && !content;
+    const isFirstBlockWithoutSibling = !block.parentElement.nextElementSibling;
     if (isFirstBlockWithoutHtml && isFirstBlockWithoutSibling) {
       this.setState({
         ...this.state,
         html: "Type a page title...",
         tag: "h1",
+        imageUrl: "",
         placeholder: true,
         isTyping: false,
       });
@@ -218,22 +294,65 @@ class EditableBlock extends React.Component {
     }
   }
 
+  // If we have a text selection, the action menu should be displayed above
+  // If we have a drag handle click, the action menu should be displayed beside
+  calculateActionMenuPosition(parent, initiator) {
+    switch (initiator) {
+      case "TEXT_SELECTION":
+        const { selectionStart, selectionEnd } = getSelectionPositions(parent);
+        const { x: endX, y: endY } = getCaretCoordinates(parent, selectionEnd);
+        const { x: startX, y: startY } = getCaretCoordinates(
+          parent,
+          selectionStart
+        );
+        const middleX = startX + (endX - startX) / 2;
+        return { x: middleX, y: startY };
+      case "DRAG_HANDLE_CLICK":
+        const x =
+          parent.offsetLeft - parent.scrollLeft + parent.clientLeft - 90;
+        const y = parent.offsetTop - parent.scrollTop + parent.clientTop + 35;
+        return { x: x, y: y };
+      default:
+        return { x: null, y: null };
+    }
+  }
+
+  // If the user types the "/" command, the tag selector menu should be display above
+  // If it is triggered by the action menu, it should be positioned relatively to its initiator
+  calculateTagSelectorMenuPosition(initiator) {
+    const block = this.contentEditable.current;
+    switch (initiator) {
+      case "KEY_CMD":
+        const { selectionEnd } = getSelectionPositions(block);
+        const { x: caretX, y: caretY } = getCaretCoordinates(
+          block,
+          selectionEnd
+        );
+        return { x: caretX, y: caretY };
+      case "ACTION_MENU":
+        const { x: actionX, y: actionY } = this.state.actionMenuPosition;
+        return { x: actionX - 40, y: actionY };
+      default:
+        return { x: null, y: null };
+    }
+  }
+
   render() {
     return (
       <>
         {this.state.tagSelectorMenuOpen && (
           <TagSelectorMenu
-            parent={this.contentEditable.current}
+            position={this.state.tagSelectorMenuPosition}
             closeMenu={this.closeTagSelectorMenu}
             handleSelection={this.handleTagSelection}
           />
         )}
         {this.state.actionMenuOpen && (
           <ActionMenu
-            parent={this.contentEditable.current}
+            position={this.state.actionMenuPosition}
             actions={{
               deleteBlock: () => this.props.deleteBlock({ id: this.props.id }),
-              turnInto: this.openTagSelectorMenu,
+              turnInto: () => this.openTagSelectorMenu("ACTION_MENU"),
             }}
           />
         )}
@@ -242,34 +361,66 @@ class EditableBlock extends React.Component {
             <div
               ref={provided.innerRef}
               className={styles.draggable}
-              onMouseEnter={this.handleMouseEnter}
-              onMouseLeave={this.handleMouseLeave}
               {...provided.draggableProps}
             >
-              <ContentEditable
-                innerRef={this.contentEditable}
-                data-position={this.props.position}
-                html={this.state.html}
-                onChange={this.handleChange}
-                onFocus={this.handleFocus}
-                onBlur={this.handleBlur}
-                onKeyDown={this.handleKeyDown}
-                onMouseUp={this.handleMouseUp}
-                tagName={this.state.tag}
-                className={[
-                  styles.block,
-                  this.state.blockHovering ? styles.blockHovering : null,
-                  this.state.placeholder ? styles.placeholder : null,
-                  snapshot.isDragging ? styles.isDragging : null,
-                ].join(" ")}
-              />
+              {this.state.tag !== "img" && (
+                <ContentEditable
+                  innerRef={this.contentEditable}
+                  data-position={this.props.position}
+                  data-tag={this.state.tag}
+                  html={this.state.html}
+                  onChange={this.handleChange}
+                  onFocus={this.handleFocus}
+                  onBlur={this.handleBlur}
+                  onKeyDown={this.handleKeyDown}
+                  onMouseUp={this.handleMouseUp}
+                  tagName={this.state.tag}
+                  className={[
+                    styles.block,
+                    this.state.isTyping ||
+                    this.state.actionMenuOpen ||
+                    this.state.tagSelectorMenuOpen
+                      ? styles.blockSelected
+                      : null,
+                    this.state.placeholder ? styles.placeholder : null,
+                    snapshot.isDragging ? styles.isDragging : null,
+                  ].join(" ")}
+                />
+              )}
+              {this.state.tag === "img" && (
+                <div
+                  data-position={this.props.position}
+                  data-tag={this.state.tag}
+                  ref={this.contentEditable}
+                  className={[
+                    styles.image,
+                    this.state.actionMenuOpen || this.state.tagSelectorMenuOpen
+                      ? styles.blockSelected
+                      : null,
+                  ].join(" ")}
+                >
+                  <input
+                    name={this.state.tag}
+                    className={styles.fileInput}
+                    type="file"
+                    onChange={this.handleImageUpload}
+                    ref={(ref) => (this.fileInput = ref)}
+                  />
+                  {this.state.imageUrl && (
+                    <img
+                      src={
+                        process.env.NEXT_PUBLIC_API + "/" + this.state.imageUrl
+                      }
+                      alt={/[^\/]+(?=\.[^\/.]*$)/.exec(this.state.imageUrl)[0]}
+                    />
+                  )}
+                </div>
+              )}
               <span
                 role="button"
                 tabIndex="0"
                 className={styles.dragHandle}
-                style={
-                  this.state.blockHovering ? { opacity: 1 } : { opacity: 0 }
-                }
+                onClick={this.handleDragHandleClick}
                 {...provided.dragHandleProps}
               >
                 <img src={DragHandleIcon} alt="Icon" />

@@ -11,11 +11,18 @@ import { objectId, setCaretPosition } from "../../utils";
 //     _id: "5f54d75b114c6d176d7e9765",
 //     html: "Heading",
 //     tag: "h1",
+//     imageUrl: "",
 //   },
 //   {
 //     _id: "5f54d75b114c6d176d7e9766",
 //     html: "I am a <strong>paragraph</strong>",
 //     tag: "p",
+//     imageUrl: "",
+//   },
+//     _id: "5f54d75b114c6d176d7e9767",
+//     html: "/im",
+//     tag: "img",
+//     imageUrl: "images/test.png",
 //   }
 // ]
 
@@ -63,7 +70,9 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
       const nextBlock = document.querySelector(
         `[data-position="${nextBlockPosition}"]`
       );
-      nextBlock.focus();
+      if (nextBlock) {
+        nextBlock.focus();
+      }
     }
     // If a block was deleted, move the caret to the end of the last block
     if (prevBlocks && prevBlocks.length - 1 === blocks.length) {
@@ -73,32 +82,60 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
       const lastBlock = document.querySelector(
         `[data-position="${lastBlockPosition}"]`
       );
-      setCaretPosition(lastBlock);
-      lastBlock.focus();
+      if (lastBlock) {
+        setCaretPosition(lastBlock);
+        lastBlock.focus();
+      }
     }
   }, [blocks, prevBlocks, currentBlockId]);
 
+  const deleteImageOnServer = async (imageUrl) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API}/pages/${imageUrl}`,
+        {
+          method: "DELETE",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      await response.json();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   const updateBlockHandler = (currentBlock) => {
     const index = blocks.map((b) => b._id).indexOf(currentBlock.id);
+    const oldBlock = blocks[index];
     const updatedBlocks = [...blocks];
     updatedBlocks[index] = {
       ...updatedBlocks[index],
       tag: currentBlock.tag,
       html: currentBlock.html,
+      imageUrl: currentBlock.imageUrl,
     };
     setBlocks(updatedBlocks);
+    // If the image has been changed, we have to delete the
+    // old image file on the server
+    if (oldBlock.imageUrl && oldBlock.imageUrl !== currentBlock.imageUrl) {
+      deleteImageOnServer(oldBlock.imageUrl);
+    }
   };
 
   const addBlockHandler = (currentBlock) => {
     setCurrentBlockId(currentBlock.id);
     const index = blocks.map((b) => b._id).indexOf(currentBlock.id);
     const updatedBlocks = [...blocks];
-    const newBlock = { _id: objectId(), tag: "p", html: "" };
+    const newBlock = { _id: objectId(), tag: "p", html: "", imageUrl: "" };
     updatedBlocks.splice(index + 1, 0, newBlock);
     updatedBlocks[index] = {
       ...updatedBlocks[index],
       tag: currentBlock.tag,
       html: currentBlock.html,
+      imageUrl: currentBlock.imageUrl,
     };
     setBlocks(updatedBlocks);
   };
@@ -106,9 +143,15 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
   const deleteBlockHandler = (currentBlock) => {
     setCurrentBlockId(currentBlock.id);
     const index = blocks.map((b) => b._id).indexOf(currentBlock.id);
+    const deletedBlock = blocks[index];
     const updatedBlocks = [...blocks];
     updatedBlocks.splice(index, 1);
     setBlocks(updatedBlocks);
+    // If the deleted block was an image block, we have to delete
+    // the image file on the server
+    if (deletedBlock.tag === "img" && deletedBlock.imageUrl) {
+      deleteImageOnServer(deletedBlock.imageUrl);
+    }
   };
 
   const onDragEndHandler = (result) => {
@@ -140,6 +183,7 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
                   id={block._id}
                   tag={block.tag}
                   html={block.html}
+                  imageUrl={block.imageUrl}
                   addBlock={addBlockHandler}
                   deleteBlock={deleteBlockHandler}
                   updateBlock={updateBlockHandler}

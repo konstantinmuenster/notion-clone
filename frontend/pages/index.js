@@ -10,7 +10,7 @@ const IndexPage = ({ pid, blocks, fetchError }) => {
 export const getServerSideProps = async (context) => {
   // res is server-side only - if we don't have it, render a blank page
   const res = context.res;
-  const blocks = [{ tag: "p", html: "" }];
+  const blocks = [{ tag: "p", html: "", imageUrl: "" }];
   if (res && blocks) {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/pages`, {
