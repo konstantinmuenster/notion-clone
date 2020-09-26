@@ -19,4 +19,10 @@ router.put("/:pageId", pagesController.putPage);
 // DELETE /pages/{id}
 router.delete("/:pageId", pagesController.deletePage);
 
+// POST /pages/images
+router.post("/images", pagesController.postImage);
+
+// DELETE /pages/images/{name}
+router.delete("/images/:imageName", pagesController.deleteImage);
+
 module.exports = router;

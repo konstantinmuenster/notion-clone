@@ -13,6 +13,10 @@ const pageSchema = new Schema(
           type: String,
           required: false,
         },
+        imageUrl: {
+          type: String,
+          required: false,
+        }
       },
     ],
     // creator: {
