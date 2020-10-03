@@ -16,14 +16,13 @@ const pageSchema = new Schema(
         imageUrl: {
           type: String,
           required: false,
-        }
+        },
       },
     ],
-    // creator: {
-    //     type: Schema.Types.ObjectId,
-    //     ref: "User",
-    //     required: true
-    // }
+    creator: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true }
 );

@@ -2,11 +2,13 @@ const path = require("path");
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 const multer = require("multer");
 const dotenv = require("dotenv");
 dotenv.config();
 
 const pagesRoutes = require("./routes/pages");
+const usersRoutes = require("./routes/users");
 
 // Configuration where images should be stored and named
 const fileStorage = multer.diskStorage({
@@ -36,23 +38,26 @@ const fileFilter = (req, file, cb) => {
 const app = express();
 
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Origin", process.env.FRONTEND_URL);
+  res.setHeader("Access-Control-Allow-Credentials", true);
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "OPTIONS, GET, POST, PUT, PATCH, DELETE"
+    "GET, POST, OPTIONS, PUT, DELETE"
   );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   next();
 });
 
 app.use(bodyParser.json());
+app.use(cookieParser());
+
 app.use(
   multer({ storage: fileStorage, fileFilter: fileFilter }).single("image")
 );
-app.use("/images", express.static(path.join(__dirname, "images")));
 
-// Routes
+app.use("/images", express.static(path.join(__dirname, "images")));
 app.use("/pages", pagesRoutes);
+app.use("/users", usersRoutes);
 
 // Error Handling
 app.use((err, req, res, next) => {

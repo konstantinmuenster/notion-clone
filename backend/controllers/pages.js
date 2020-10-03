@@ -2,104 +2,155 @@ const fs = require("fs");
 const path = require("path");
 
 const Page = require("../models/page");
+const User = require("../models/user");
 
-const getPages = (req, res, next) => {
-  Page.find()
-    .then((pages) => {
-      res.status(200).json({
-        message: "Fetched pages successfully.",
-        pages: pages.map((page) => page._id),
-      });
-    })
-    .catch((err) => {
-      next(err);
+const getPages = async (req, res, next) => {
+  const userId = req.userId;
+
+  if (!userId) {
+    const err = new Error("User is not authenticated.");
+    err.statusCode = 401;
+    throw err;
+  }
+
+  try {
+    const user = await User.findById(userId);
+    res.status(200).json({
+      message: "Fetched pages successfully.",
+      pages: user.pages.map((page) => page.toString()),
     });
+  } catch (err) {
+    next(err);
+  }
 };
 
-const getPage = (req, res, next) => {
+const getPage = async (req, res, next) => {
+  const userId = req.userId;
   const pageId = req.params.pageId;
-  Page.findById(pageId)
-    .then((page) => {
-      if (page) {
-        res.status(200).json({
-          message: "Fetched page successfully.",
-          page: page,
-        });
-      } else {
-        const err = new Error("Could not find page by id.");
-        err.statusCode = 404;
-        throw err;
-      }
-    })
-    .catch((err) => {
-      next(err);
-    });
+
+  try {
+    const page = await Page.findById(pageId);
+
+    if (!page) {
+      const err = new Error("Could not find page by id.");
+      err.statusCode = 404;
+      throw err;
+    }
+
+    // Public pages have no creator, they can be accessed by anybody
+    // For private pages, creator and logged-in user have to be the same
+    const creatorId = page.creator ? page.creator.toString() : null;
+    if ((creatorId && creatorId === userId) || !creatorId) {
+      res.status(200).json({
+        message: "Fetched page successfully.",
+        page: page,
+      });
+    } else {
+      const err = new Error("User is not authenticated.");
+      err.statusCode = 401;
+      throw err;
+    }
+  } catch (err) {
+    next(err);
+  }
 };
 
-const postPage = (req, res, next) => {
+const postPage = async (req, res, next) => {
+  const userId = req.userId;
   const blocks = req.body.blocks;
   const page = new Page({
     blocks: blocks,
+    creator: userId || null,
   });
-  page
-    .save()
-    .then((page) => {
-      res.status(201).json({
-        message: "Created page successfully.",
-        pageId: page._id,
-        blocks: blocks,
-      });
-    })
-    .catch((err) => {
-      next(err);
+  try {
+    const savedPage = await page.save();
+
+    // Update user collection too
+    if (userId) {
+      const user = await User.findById(userId);
+      if (!user) {
+        const err = new Error("Could not find user by id.");
+        err.statusCode = 404;
+        throw err;
+      }
+      user.pages.push(savedPage._id);
+      await user.save();
+    }
+
+    res.status(201).json({
+      message: "Created page successfully.",
+      pageId: savedPage._id.toString(),
+      blocks: blocks,
+      creator: userId || null,
     });
+  } catch (err) {
+    next(err);
+  }
 };
 
-const putPage = (req, res, next) => {
+const putPage = async (req, res, next) => {
+  const userId = req.userId;
   const pageId = req.params.pageId;
   const blocks = req.body.blocks;
-  Page.findById(pageId)
-    .then((page) => {
-      if (page) {
-        page.blocks = blocks;
-        return page.save();
-      } else {
-        const err = new Error("Could not find page by id.");
-        err.statusCode = 404;
-        throw err;
-      }
-    })
-    .then((page) => {
+
+  try {
+    const page = await Page.findById(pageId);
+
+    if (!page) {
+      const err = new Error("Could not find page by id.");
+      err.statusCode = 404;
+      throw err;
+    }
+
+    // Public pages have no creator, they can be updated by anybody
+    // For private pages, creator and logged-in user have to be the same
+    const creatorId = page.creator ? page.creator.toString() : null;
+    if ((creatorId && creatorId === userId) || !creatorId) {
+      page.blocks = blocks;
+      const savedPage = await page.save();
       res.status(200).json({
         message: "Updated page successfully.",
-        page: page,
+        page: savedPage,
       });
-    })
-    .catch((err) => {
-      next(err);
-    });
+    } else {
+      const err = new Error("User is not authenticated.");
+      err.statusCode = 401;
+      throw err;
+    }
+  } catch (err) {
+    next(err);
+  }
 };
 
-const deletePage = (req, res, next) => {
+const deletePage = async (req, res, next) => {
+  const userId = req.userId;
   const pageId = req.params.pageId;
-  Page.findById(pageId)
-    .then((page) => {
-      if (page) {
-        return Page.deleteOne({ _id: pageId });
-      } else {
-        const err = new Error("Could not find page by id.");
-        err.statusCode = 404;
-        throw err;
-      }
-    })
-    .then((result) => {
+
+  try {
+    const page = await Page.findById(pageId);
+
+    if (!page) {
+      const err = new Error("Could not find page by id.");
+      err.statusCode = 404;
+      throw err;
+    }
+
+    // Public pages have no creator, they can be deleted by anybody
+    // For private pages, creator and logged-in user have to be the same
+    const creatorId = page.creator ? page.creator.toString() : null;
+    if ((creatorId && creatorId === userId) || !creatorId) {
+      await Page.deleteOne({ _id: pageId });
       res.status(200).json({
         message: "Deleted page successfully.",
       });
-    })
-    .catch((err) => {
-      next(err);
-    });
+    } else {
+      const err = new Error("User is not authenticated.");
+      err.statusCode = 401;
+      throw err;
+    }
+  } catch (err) {
+    next(err);
+  }
 };
 
 const postImage = (req, res, next) => {
