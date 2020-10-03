@@ -58,3 +58,16 @@
         opacity: 1;
     }
 }
+
+.user {
+    width: auto;
+    height: auto;
+    img {
+        width: 1.6rem;
+        height: 1.6rem;
+        margin: .125rem .125rem 0 0;
+    }
+    img:hover, img:focus {
+        cursor: pointer;
+    }
+}

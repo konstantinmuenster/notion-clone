@@ -1,0 +1,24 @@
+.notice {
+  width: calc(100% - 1rem);
+  padding: 2rem 1rem;
+  border-radius: 0.5rem;
+  background: #fffaf0;
+  color: #975a16;
+  h3 {
+    margin: 0 0 1rem;
+  }
+}
+
+.errorNotice {
+  background: #fed7d7;
+  color: #9b2c2c;
+}
+
+.successNotice {
+  background: #c6f6d5;
+  color: #276749;
+}
+
+.miniNotice {
+  padding: 1rem;
+}

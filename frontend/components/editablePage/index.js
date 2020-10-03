@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 
 import EditableBlock from "../editableBlock";
+import Notice from "../notice";
 import { usePrevious } from "../../hooks";
 import { objectId, setCaretPosition } from "../../utils";
 
@@ -27,7 +28,14 @@ import { objectId, setCaretPosition } from "../../utils";
 // ]
 
 const EditablePage = ({ id, fetchedBlocks, err }) => {
-  if (err) return <h1>Something went wrong.</h1>;
+  if (err) {
+    return (
+      <Notice status="ERROR">
+        <h3>Something went wrong.</h3>
+        <p>Have you tried to restart the app at "/" ?</p>
+      </Notice>
+    );
+  }
 
   const [blocks, setBlocks] = useState(fetchedBlocks);
   const [currentBlockId, setCurrentBlockId] = useState(null);
@@ -42,10 +50,8 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
           `${process.env.NEXT_PUBLIC_API}/pages/${id}`,
           {
             method: "PUT",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               blocks: blocks,
             }),
@@ -90,6 +96,8 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
   }, [blocks, prevBlocks, currentBlockId]);
 
   const deleteImageOnServer = async (imageUrl) => {
+    // The imageUrl contains images/name.jpg, hence we do not need
+    // to explicitly add the /images endpoint in the API url
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API}/pages/${imageUrl}`,

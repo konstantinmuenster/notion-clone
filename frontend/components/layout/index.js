@@ -1,8 +1,18 @@
+import { useContext } from "react";
+import { useRouter } from "next/router";
+
+import { UserStateContext } from "../../context/UserContext";
+
 import Button from "../button";
 import styles from "./styles.module.scss";
 import GithubIcon from "../../images/github.svg";
+import UserIcon from "../../images/user.svg";
 
 const Layout = ({ children }) => {
+  const state = useContext(UserStateContext);
+  const router = useRouter();
+  const isLoginPage = router.pathname === "/login";
+  const isAuth = state.isAuth;
   return (
     <div id="layoutRoot">
       <header className={styles.headerBar}>
@@ -12,7 +22,14 @@ const Layout = ({ children }) => {
           </a>
         </div>
         <nav className={styles.nav}>
-          <Button href="/login">Login</Button>
+          {!isLoginPage && !isAuth && <Button href="/login">Login</Button>}
+          {!isLoginPage && isAuth && (
+            <div className={styles.user}>
+              <span role="button" tabIndex="0">
+                <img src={UserIcon} alt="User Icon" />
+              </span>
+            </div>
+          )}
         </nav>
       </header>
       <main className={styles.content}>{children}</main>
