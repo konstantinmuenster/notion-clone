@@ -122,6 +122,43 @@ const getUser = async (req, res, next) => {
   }
 };
 
+const updateUser = async (req, res, next) => {
+  const userId = req.userId;
+  const name = req.body.name;
+  const email = req.body.email;
+  const password = req.body.password;
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!userId || !user) {
+      const err = new Error("User is not authenticated.");
+      err.statusCode = 401;
+      throw err;
+    }
+
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 12);
+      user.password = hashedPassword;
+    }
+
+    user.name = name;
+    user.email = email;
+
+    const savedUser = await user.save();
+
+    res.status(201).json({
+      message: "User successfully updated.",
+      userId: savedUser._id.toString(),
+      name: savedUser.name,
+      email: savedUser.email,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.signup = signup;
 exports.login = login;
 exports.getUser = getUser;
+exports.updateUser = updateUser;

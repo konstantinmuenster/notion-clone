@@ -27,4 +27,7 @@ router.post(
 // GET /users/account
 router.get("/account", isAuth, usersController.getUser);
 
+// PUT /users/account
+router.put("/account", isAuth, usersController.updateUser);
+
 module.exports = router;

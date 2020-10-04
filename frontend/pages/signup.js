@@ -31,16 +31,17 @@ const form = {
       value: "",
     },
   ],
-  button: {
+  submitButton: {
     type: "submit",
     label: "Sign up",
   },
 };
 
 const SignupPage = () => {
+  const RESET_NOTICE = { type: "", message: "" };
+  const [notice, setNotice] = useState(RESET_NOTICE);
   const dispatch = useContext(UserDispatchContext);
   const router = useRouter();
-  const [errorMessage, setErrorMessage] = useState("");
 
   const values = {};
   form.inputs.forEach((input) => (values[input.id] = input.value));
@@ -52,7 +53,7 @@ const SignupPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
+    setNotice(RESET_NOTICE);
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API}/users/signup`,
@@ -69,14 +70,14 @@ const SignupPage = () => {
       );
       const data = await response.json();
       if (data.errCode) {
-        setErrorMessage(data.message);
+        setNotice({ type: "ERROR", message: data.message });
       } else {
         dispatch({ type: "LOGIN" });
         router.push("/account");
       }
     } catch (err) {
       console.log(err);
-      setErrorMessage("Something unexpected happened. Please reload.");
+      setNotice({ type: "ERROR", message: "Something unexpected happened." });
       dispatch({ type: "LOGOUT" });
     }
   };
@@ -98,12 +99,12 @@ const SignupPage = () => {
           />
         );
       })}
-      {errorMessage && (
-        <Notice status="ERROR" mini>
-          {errorMessage}
+      {notice.message && (
+        <Notice status={notice.type} mini>
+          {notice.message}
         </Notice>
       )}
-      <button type={form.button}>{form.button.label}</button>
+      <button type={form.submitButton.type}>{form.submitButton.label}</button>
     </form>
   );
 };
