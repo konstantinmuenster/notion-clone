@@ -24,6 +24,9 @@ router.post(
   usersController.login
 );
 
+// POST /users/logout
+router.post("/logout", isAuth, usersController.logout);
+
 // GET /users/account
 router.get("/account", isAuth, usersController.getUser);
 

@@ -98,6 +98,22 @@ const login = async (req, res, next) => {
   }
 };
 
+const logout = (req, res, next) => {
+  const userId = req.userId;
+
+  if (!userId) {
+    const err = new Error("User is not authenticated.");
+    err.statusCode = 401;
+    throw err;
+  }
+
+  res.clearCookie("token");
+  res.status(200).json({
+    message: "User successfully logged out.",
+    userId: userId,
+  });
+};
+
 const getUser = async (req, res, next) => {
   const userId = req.userId;
 
@@ -160,5 +176,6 @@ const updateUser = async (req, res, next) => {
 
 exports.signup = signup;
 exports.login = login;
+exports.logout = logout;
 exports.getUser = getUser;
 exports.updateUser = updateUser;

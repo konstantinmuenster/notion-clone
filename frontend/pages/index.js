@@ -27,6 +27,7 @@ export const getServerSideProps = async (context) => {
     const data = await response.json();
     res.writeHead(302, { Location: `/p/${data.pageId}` });
     res.end();
+    return { props: {} };
   } catch (err) {
     console.log(err);
     return { props: { blocks: null, pid: null, err: true } };
