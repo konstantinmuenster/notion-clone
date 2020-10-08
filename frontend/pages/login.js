@@ -69,7 +69,7 @@ const LoginPage = () => {
         setNotice({ type: "ERROR", message: data.message });
       } else {
         dispatch({ type: "LOGIN" });
-        router.push("/account");
+        router.push("/pages");
       }
     } catch (err) {
       console.log(err);
@@ -86,7 +86,7 @@ const LoginPage = () => {
   return (
     <>
       <form id={form.id} onSubmit={handleSubmit}>
-        <h1>Login</h1>
+        <h1 className="pageHeading">Login</h1>
         {form.inputs.map((input, key) => {
           return (
             <Input

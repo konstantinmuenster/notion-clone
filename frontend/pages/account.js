@@ -80,7 +80,7 @@ const AccountPage = ({ user }) => {
 
   return (
     <form id={form.id} method="post" onSubmit={handleSubmit}>
-      <h1>Account</h1>
+      <h1 className="pageHeading">Account</h1>
       {form.inputs.map((input, key) => {
         return (
           <Input

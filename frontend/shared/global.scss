@@ -59,11 +59,12 @@ a {
     text-decoration: none;
 }
 
+h1.pageHeading {
+  color: $primary;
+  margin-bottom: 3rem;
+}
+
 form {
-  h1 {
-    color: $primary;
-    margin-bottom: 3rem;
-  }
   button {
     width: auto;
     min-width: 9rem;
