@@ -46,7 +46,7 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
   useEffect(() => {
     const updatePageOnServer = async (blocks) => {
       try {
-        const response = await fetch(
+        await fetch(
           `${process.env.NEXT_PUBLIC_API}/pages/${id}`,
           {
             method: "PUT",
@@ -57,7 +57,6 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
             }),
           }
         );
-        await response.json();
       } catch (err) {
         console.log(err);
       }
