@@ -7,14 +7,21 @@ const User = require("../models/user");
 const getPages = async (req, res, next) => {
   const userId = req.userId;
 
-  if (!userId) {
-    const err = new Error("User is not authenticated.");
-    err.statusCode = 401;
-    throw err;
-  }
-
   try {
+    if (!userId) {
+      const err = new Error("User is not authenticated.");
+      err.statusCode = 401;
+      throw err;
+    }
+
     const user = await User.findById(userId);
+
+    if (!user) {
+      const err = new Error("Could not find user by id.");
+      err.statusCode = 404;
+      throw err;
+    }
+
     res.status(200).json({
       message: "Fetched pages successfully.",
       pages: user.pages.map((page) => page.toString()),
@@ -30,7 +37,6 @@ const getPage = async (req, res, next) => {
 
   try {
     const page = await Page.findById(pageId);
-
     if (!page) {
       const err = new Error("Could not find page by id.");
       err.statusCode = 404;
@@ -60,7 +66,7 @@ const postPage = async (req, res, next) => {
   const blocks = req.body.blocks;
   const page = new Page({
     blocks: blocks,
-    creator: userId || null,
+    creator: userId || null,
   });
   try {
     const savedPage = await page.save();
@@ -81,7 +87,7 @@ const postPage = async (req, res, next) => {
       message: "Created page successfully.",
       pageId: savedPage._id.toString(),
       blocks: blocks,
-      creator: userId || null,
+      creator: userId || null,
     });
   } catch (err) {
     next(err);
@@ -139,7 +145,20 @@ const deletePage = async (req, res, next) => {
     // For private pages, creator and logged-in user have to be the same
     const creatorId = page.creator ? page.creator.toString() : null;
     if ((creatorId && creatorId === userId) || !creatorId) {
-      await Page.deleteOne({ _id: pageId });
+      const deletedPage = await Page.findByIdAndDelete(pageId);
+
+      // Update user collection too
+      if (creatorId) {
+        const user = await User.findById(userId);
+        if (!user) {
+          const err = new Error("Could not find user by id.");
+          err.statusCode = 404;
+          throw err;
+        }
+        user.pages.splice(user.pages.indexOf(deletedPage._id), 1);
+        await user.save();
+      }
+
       res.status(200).json({
         message: "Deleted page successfully.",
       });
