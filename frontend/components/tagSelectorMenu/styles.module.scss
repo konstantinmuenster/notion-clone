@@ -23,6 +23,10 @@
   border-bottom: 1px solid $secondary;
 }
 
+.item:last-of-type {
+  border-bottom: none;
+}
+
 .item:hover,
 .item:focus {
   background: $tertiary;
