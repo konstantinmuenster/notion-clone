@@ -1,73 +1,78 @@
 @import "../../shared/variables.scss";
 
 .headerBar {
-    width: calc(100% - 2rem);
-    max-width: $max-width;
-    padding: 1rem;
-    margin: 1rem;
-    background: $secondary;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: .5rem;
+  width: calc(100% - 2rem);
+  max-width: $max-width;
+  padding: 1rem;
+  margin: 1rem;
+  background: $secondary;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 0.5rem;
 }
 
 .logo {
-    font-family: $accent;
-    font-size: 1.5rem;
-    color: $primary;
-    font-weight: 700;
+  font-family: $accent;
+  font-size: 1.5rem;
+  color: $primary;
+  font-weight: 700;
 }
 
 .content {
-    width: 100%;
-    max-width: $max-width;
-    padding: 1rem 0 1rem 1rem;
-    margin: 0;
+  width: 100%;
+  max-width: $max-width;
+  padding: 1rem 0 1rem 1rem;
+  margin: 0;
 }
 
 .footerBar {
-    width: calc(100% - 2rem);
-    max-width: $max-width;
-    margin: 1rem;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+  width: calc(100% - 2rem);
+  max-width: $max-width;
+  margin: 1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .hr {
-    display: block; 
-    width: 100%;
-    height: 1px;
-    border: 0; 
-    border-top: 1px solid $tertiary;
+  display: block;
+  width: 100%;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid $tertiary;
 }
 
 .github {
-    width: auto;
-    height: auto;
-    margin-left: 1rem;
-    img {
-        width: 1.5rem;
-        height: 1.5rem;
-        opacity: .75;
-    }
-    img:hover {
-        opacity: 1;
-    }
+  width: auto;
+  height: auto;
+  margin-left: 1rem;
+  img {
+    width: 1.5rem;
+    height: 1.5rem;
+    opacity: 0.75;
+  }
+  img:hover {
+    opacity: 1;
+  }
+}
+
+.nav {
+  position: relative;
 }
 
 .user {
-    width: auto;
-    height: auto;
-    img {
-        width: 1.6rem;
-        height: 1.6rem;
-        margin: .125rem .125rem 0 0;
-    }
-    img:hover, img:focus {
-        cursor: pointer;
-    }
+  width: auto;
+  height: auto;
+  img {
+    width: 1.6rem;
+    height: 1.6rem;
+    margin: 0.125rem 0.125rem 0 0;
+  }
+  img:hover,
+  img:focus {
+    cursor: pointer;
+  }
 }
