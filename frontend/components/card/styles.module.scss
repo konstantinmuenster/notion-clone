@@ -1,0 +1,95 @@
+@import "../../shared/variables.scss";
+
+.cardWrapper {
+  position: relative;
+  width: calc(100% - 1rem);
+  height: 100%;
+  margin: 2rem 0;
+}
+
+.card {
+  background: #fafafa;
+  border: 1px solid #e3e3e3;
+  border-radius: 0.5rem;
+  padding: 1rem 1rem 3rem 1rem;
+  font-size: 1rem;
+  font-family: $regular;
+  color: $text;
+}
+
+.date {
+  display: block;
+  margin: 0;
+  color: $text;
+  font-family: $regular;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: +0.5px;
+}
+
+.content {
+  position: relative;
+  overflow: hidden;
+  height: 7rem;
+  h1 {
+    font-size: 1.5rem;
+    line-height: 1.75rem;
+    margin-bottom: 1.125rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    line-height: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 0.125rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+    line-height: 1.25rem;
+    margin-top: 0;
+    margin-bottom: 0.125rem;
+  }
+
+  p {
+    font-size: 1rem;
+    line-height: 1.25rem;
+    margin-top: 0;
+    margin-bottom: 0.125rem;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+.content::before {
+  content: "";
+  position: absolute;
+  top: 5rem;
+  left: 0;
+  height: 2rem;
+  width: calc(100% - 1rem);
+  background: linear-gradient(
+    0deg,
+    rgba(250, 250, 250, 1) 0%,
+    rgba(250, 250, 250, 0) 100%
+  );
+}
+
+.moreButton {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  z-index: 11;
+  width: 5rem;
+  height: 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.moreButton:hover {
+  cursor: pointer;
+}
