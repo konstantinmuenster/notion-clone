@@ -73,7 +73,7 @@ const SignupPage = () => {
         setNotice({ type: "ERROR", message: data.message });
       } else {
         dispatch({ type: "LOGIN" });
-        router.push("/account");
+        router.push("/pages");
       }
     } catch (err) {
       console.log(err);
