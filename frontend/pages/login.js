@@ -85,8 +85,8 @@ const LoginPage = () => {
 
   return (
     <>
+      <h1 className="pageHeading">Login</h1>
       <form id={form.id} onSubmit={handleSubmit}>
-        <h1 className="pageHeading">Login</h1>
         {form.inputs.map((input, key) => {
           return (
             <Input

@@ -83,29 +83,31 @@ const SignupPage = () => {
   };
 
   return (
-    <form id={form.id} method="post" onSubmit={handleSubmit}>
+    <>
       <h1 className="pageHeading">Signup</h1>
-      {form.inputs.map((input, key) => {
-        return (
-          <Input
-            key={key}
-            formId={form.id}
-            id={input.id}
-            type={input.type}
-            label={input.label}
-            required={input.required}
-            value={formData[input.id]}
-            setValue={(value) => handleInputChange(input.id, value)}
-          />
-        );
-      })}
-      {notice.message && (
-        <Notice status={notice.type} mini>
-          {notice.message}
-        </Notice>
-      )}
-      <button type={form.submitButton.type}>{form.submitButton.label}</button>
-    </form>
+      <form id={form.id} method="post" onSubmit={handleSubmit}>
+        {form.inputs.map((input, key) => {
+          return (
+            <Input
+              key={key}
+              formId={form.id}
+              id={input.id}
+              type={input.type}
+              label={input.label}
+              required={input.required}
+              value={formData[input.id]}
+              setValue={(value) => handleInputChange(input.id, value)}
+            />
+          );
+        })}
+        {notice.message && (
+          <Notice status={notice.type} mini>
+            {notice.message}
+          </Notice>
+        )}
+        <button type={form.submitButton.type}>{form.submitButton.label}</button>
+      </form>
+    </>
   );
 };
 
