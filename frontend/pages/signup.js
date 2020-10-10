@@ -73,7 +73,14 @@ const SignupPage = () => {
         setNotice({ type: "ERROR", message: data.message });
       } else {
         dispatch({ type: "LOGIN" });
-        router.push("/pages");
+        setNotice({
+          type: "SUCCESS",
+          message:
+            "Success! Check your inbox to confirm your email. You will now be redirected.",
+        });
+        setTimeout(() => {
+          router.push("/pages");
+        }, 4000);
       }
     } catch (err) {
       console.log(err);

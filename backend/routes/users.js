@@ -43,4 +43,7 @@ router.post(
   usersController.resetPassword
 );
 
+// POST /users/activate
+router.post("/activate", usersController.activateAccount);
+
 module.exports = router;

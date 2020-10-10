@@ -39,4 +39,25 @@ const resetPasswordTemplate = (resetToken) => `
     </html>
 `;
 
+const emailConfirmationTemplate = (activationToken) => `
+    <html>
+        <head>
+            <title>Confirm Your Email</title>
+            <style>${globalStyle}</style>
+        </head>
+        <body>
+            <h1>Confirm Your Email</h1>
+            <p>Welcome to <strong>notion.clone</strong>!</p>
+            <p>Let's confirm your email address. Please click the button to confirm your email address and activate your account:</p>
+            <p><a class="button" href="${process.env.FRONTEND_URL}/activateAccount?token=${activationToken}" target="_blank">Confirm Email Address</a></p>
+            <p>If you don't confirm your email address within the next 48 hours, your account will be deleted automatically.</p>
+            <p style="margin-top: 40px;">
+                Cheers Konstantin 👋<br/>
+                <a href="${process.env.FRONTEND_URL}" target="_blank">notion.clone</a>
+            </p>
+        </body>
+    </html>
+`;
+
 exports.resetPasswordTemplate = resetPasswordTemplate;
+exports.emailConfirmationTemplate = emailConfirmationTemplate;

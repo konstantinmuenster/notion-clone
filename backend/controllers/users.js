@@ -6,7 +6,11 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
 const transport = require("../emails/transport");
-const { resetPasswordTemplate } = require("../emails/templates");
+
+const {
+  resetPasswordTemplate,
+  emailConfirmationTemplate,
+} = require("../emails/templates");
 
 const signup = async (req, res, next) => {
   try {
@@ -30,12 +34,21 @@ const signup = async (req, res, next) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
+    const activationToken = (await promisify(randomBytes)(20)).toString("hex");
     const user = new User({
       email: email,
       password: hashedPassword,
       name: name,
+      activationToken: activationToken,
     });
     const savedUser = await user.save();
+
+    await transport.sendMail({
+      from: process.env.MAIL_SENDER,
+      to: savedUser.email,
+      subject: "Confirm Your Email Address",
+      html: emailConfirmationTemplate(savedUser.activationToken),
+    });
 
     // Automatically log in user after registration
     const token = jwt.sign(
@@ -266,6 +279,33 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
+const activateAccount = async (req, res, next) => {
+  const activationToken = req.body.activationToken;
+
+  try {
+    const user = await User.findOne({
+      active: false,
+      activationToken: activationToken,
+    });
+    if (!user) {
+      const err = new Error("The activation code is invalid.");
+      err.statusCode = 422;
+      throw err;
+    }
+    
+    user.active = true;
+    user.activationToken = null;
+    const savedUser = await user.save();
+
+    res.status(201).json({
+      message: "Account successfully activated.",
+      userId: savedUser._id.toString(),
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.signup = signup;
 exports.login = login;
 exports.logout = logout;
@@ -273,3 +313,4 @@ exports.getUser = getUser;
 exports.updateUser = updateUser;
 exports.getResetToken = getResetToken;
 exports.resetPassword = resetPassword;
+exports.activateAccount = activateAccount;
