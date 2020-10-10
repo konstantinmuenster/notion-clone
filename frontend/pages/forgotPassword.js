@@ -1,13 +1,11 @@
-import { useState, useContext } from "react";
-import { useRouter } from "next/router";
+import { useState } from "react";
 import cookies from "next-cookies";
 
-import { UserDispatchContext } from "../context/UserContext";
 import Notice from "../components/notice";
 import Input from "../components/input";
 
 const form = {
-  id: "login",
+  id: "forgotPassword",
   inputs: [
     {
       id: "email",
@@ -16,29 +14,16 @@ const form = {
       required: true,
       value: "",
     },
-    {
-      id: "password",
-      type: "password",
-      label: "Password",
-      required: true,
-      value: "",
-    },
   ],
   submitButton: {
     type: "submit",
-    label: "Login",
-  },
-  button: {
-    type: "button",
-    label: "Forgot password ?",
+    label: "Request Password Reset",
   },
 };
 
-const LoginPage = () => {
+const ForgotPasswordPage = () => {
   const RESET_NOTICE = { type: "", message: "" };
   const [notice, setNotice] = useState(RESET_NOTICE);
-  const dispatch = useContext(UserDispatchContext);
-  const router = useRouter();
 
   const values = {};
   form.inputs.forEach((input) => (values[input.id] = input.value));
@@ -53,14 +38,13 @@ const LoginPage = () => {
     setNotice(RESET_NOTICE);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API}/users/login`,
+        `${process.env.NEXT_PUBLIC_API}/users/resetToken`,
         {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             email: formData.email,
-            password: formData.password,
           }),
         }
       );
@@ -68,24 +52,17 @@ const LoginPage = () => {
       if (data.errCode) {
         setNotice({ type: "ERROR", message: data.message });
       } else {
-        dispatch({ type: "LOGIN" });
-        router.push("/pages");
+        setNotice({ type: "SUCCESS", message: data.message });
       }
     } catch (err) {
       console.log(err);
       setNotice({ type: "ERROR", message: "Something unexpected happened." });
-      dispatch({ type: "LOGOUT" });
     }
-  };
-
-  const handlePasswordReset = (e) => {
-    e.preventDefault();
-    router.push("/forgotPassword");
   };
 
   return (
     <>
-      <h1 className="pageHeading">Login</h1>
+      <h1 className="pageHeading">Forgot Password</h1>
       <form id={form.id} onSubmit={handleSubmit}>
         {form.inputs.map((input, key) => {
           return (
@@ -107,16 +84,7 @@ const LoginPage = () => {
           </Notice>
         )}
         <button type={form.submitButton.type}>{form.submitButton.label}</button>
-        <button type={form.button.type} onClick={handlePasswordReset}>
-          {form.button.label}
-        </button>
       </form>
-      <p>
-        Don't have an account yet?{" "}
-        <a href="/signup" rel="noreferrer noopener">
-          <strong>Sign up here.</strong>
-        </a>
-      </p>
     </>
   );
 };
@@ -125,10 +93,10 @@ export const getServerSideProps = (context) => {
   const { token } = cookies(context);
   const res = context.res;
   if (token) {
-    res.writeHead(302, { Location: `/account` });
+    res.writeHead(302, { Location: `/pages` });
     res.end();
   }
   return { props: {} };
 };
 
-export default LoginPage;
+export default ForgotPasswordPage;

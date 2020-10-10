@@ -15,6 +15,12 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
+    resetToken: {
+      type: String,
+    },
+    resetTokenExpiry: {
+      type: Number,
+    },
     pages: [
       {
         type: Schema.Types.ObjectId,

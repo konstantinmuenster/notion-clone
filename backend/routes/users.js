@@ -33,4 +33,14 @@ router.get("/account", isAuth, usersController.getUser);
 // PUT /users/account
 router.put("/account", isAuth, usersController.updateUser);
 
+// POST /users/resetToken
+router.post("/resetToken", [emailValidator], usersController.getResetToken);
+
+// POST /users/resetPassword
+router.post(
+  "/resetPassword",
+  [passwordValidator],
+  usersController.resetPassword
+);
+
 module.exports = router;

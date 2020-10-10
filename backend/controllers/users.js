@@ -1,8 +1,12 @@
 const { validationResult } = require("express-validator");
+const { randomBytes } = require("crypto");
+const { promisify } = require("util");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
+const transport = require("../emails/transport");
+const { resetPasswordTemplate } = require("../emails/templates");
 
 const signup = async (req, res, next) => {
   try {
@@ -68,7 +72,7 @@ const login = async (req, res, next) => {
     const user = await User.findOne({ email: email });
     if (!user) {
       const err = new Error("An user with this email could not be found.");
-      err.statusCode = 401;
+      err.statusCode = 404;
       throw err;
     }
 
@@ -174,8 +178,98 @@ const updateUser = async (req, res, next) => {
   }
 };
 
+const getResetToken = async (req, res, next) => {
+  const email = req.body.email;
+
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const err = new Error("Input validation failed.");
+      err.statusCode = 422;
+      err.data = errors.array();
+      throw err;
+    }
+
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      const err = new Error("An user with this email could not be found.");
+      err.statusCode = 404;
+      throw err;
+    }
+
+    const resetToken = (await promisify(randomBytes)(20)).toString("hex");
+    const resetTokenExpiry = Date.now() + 1000 * 60 * 60; // 1 hour from now
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = resetTokenExpiry;
+    const savedUser = await user.save();
+
+    await transport.sendMail({
+      from: process.env.MAIL_SENDER,
+      to: savedUser.email,
+      subject: "Your Password Reset Token",
+      html: resetPasswordTemplate(resetToken),
+    });
+
+    res.status(200).json({
+      message: "Password Reset successfully requested! Check your inbox.",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  const password = req.body.password;
+  const resetToken = req.body.resetToken;
+
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const err = new Error("Input validation failed.");
+      err.statusCode = 422;
+      err.data = errors.array();
+      throw err;
+    }
+
+    const user = await User.findOne({
+      resetToken: resetToken,
+      resetTokenExpiry: { $gt: Date.now() - 1000 * 60 * 60 },
+    });
+    if (!user) {
+      const err = new Error("The token is either invalid or expired.");
+      err.statusCode = 422;
+      throw err;
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    user.password = hashedPassword;
+    user.resetToken = null;
+    user.resetTokenExpiry = null;
+    const savedUser = await user.save();
+
+    // Automatically sign in user after password reset
+    const token = jwt.sign(
+      { userId: savedUser._id.toString() },
+      process.env.JWT_KEY
+    );
+
+    const maxAge = 1000 * 60 * 60; // 1 hour
+    res.cookie("token", token, { httpOnly: true, maxAge: maxAge });
+
+    res.status(201).json({
+      message: "Password successfully changed.",
+      token: token,
+      userId: savedUser._id.toString(),
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.signup = signup;
 exports.login = login;
 exports.logout = logout;
 exports.getUser = getUser;
 exports.updateUser = updateUser;
+exports.getResetToken = getResetToken;
+exports.resetPassword = resetPassword;
