@@ -58,7 +58,11 @@ const signup = async (req, res, next) => {
 
     // Set cookie in the browser to store authentication state
     const maxAge = 1000 * 60 * 60 * 24 * 3; // 3 days
-    res.cookie("token", token, { httpOnly: true, maxAge: maxAge });
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: maxAge,
+      domain: process.env.DOMAIN,
+    });
 
     res.status(201).json({
       message: "User successfully created.",
@@ -103,7 +107,11 @@ const login = async (req, res, next) => {
 
     // Set cookie in the browser to store authentication state
     const maxAge = 1000 * 60 * 60; // 1 hour
-    res.cookie("token", token, { httpOnly: true, maxAge: maxAge });
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: maxAge,
+      domain: process.env.DOMAIN,
+    });
 
     res.status(201).json({
       message: "User successfully logged in.",
@@ -267,7 +275,11 @@ const resetPassword = async (req, res, next) => {
     );
 
     const maxAge = 1000 * 60 * 60; // 1 hour
-    res.cookie("token", token, { httpOnly: true, maxAge: maxAge });
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: maxAge,
+      domain: process.env.DOMAIN,
+    });
 
     res.status(201).json({
       message: "Password successfully changed.",
@@ -292,7 +304,7 @@ const activateAccount = async (req, res, next) => {
       err.statusCode = 422;
       throw err;
     }
-    
+
     user.active = true;
     user.activationToken = null;
     const savedUser = await user.save();
