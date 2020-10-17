@@ -96,17 +96,17 @@ const SignupPage = () => {
         {form.inputs.map((input, key) => {
           return (
             <Input
-              key={key}
-              formId={form.id}
-              id={input.id}
-              type={input.type}
-              label={input.label}
-              required={input.required}
-              value={formData[input.id]}
-              setValue={(value) => handleInputChange(input.id, value)}
+            key={key}
+            formId={form.id}
+            id={input.id}
+            type={input.type}
+            label={input.label}
+            required={input.required}
+            value={formData[input.id]}
+            setValue={(value) => handleInputChange(input.id, value)}
             />
-          );
-        })}
+            );
+          })}
         {notice.message && (
           <Notice status={notice.type} mini>
             {notice.message}
@@ -114,6 +114,7 @@ const SignupPage = () => {
         )}
         <button type={form.submitButton.type}>{form.submitButton.label}</button>
       </form>
+      <p>Sign up to create private pages that exist forever.</p>
     </>
   );
 };
