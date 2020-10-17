@@ -132,7 +132,7 @@ const logout = (req, res, next) => {
     throw err;
   }
 
-  res.clearCookie("token");
+  res.clearCookie("token", { domain: process.env.DOMAIN });
   res.status(200).json({
     message: "User successfully logged out.",
     userId: userId,
