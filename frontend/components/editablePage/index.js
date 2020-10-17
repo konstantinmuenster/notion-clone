@@ -191,6 +191,7 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
                   tag={block.tag}
                   html={block.html}
                   imageUrl={block.imageUrl}
+                  pageId={id}
                   addBlock={addBlockHandler}
                   deleteBlock={deleteBlockHandler}
                   updateBlock={updateBlockHandler}

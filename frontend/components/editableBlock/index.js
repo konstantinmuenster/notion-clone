@@ -255,14 +255,16 @@ class EditableBlock extends React.Component {
 
   async handleImageUpload() {
     if (this.fileInput && this.fileInput.files[0]) {
+      const pageId = this.props.pageId;
       const imageFile = this.fileInput.files[0];
       const formData = new FormData();
       formData.append("image", imageFile);
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API}/pages/images`,
+          `${process.env.NEXT_PUBLIC_API}/pages/images?pageId=${pageId}`,
           {
             method: "POST",
+            credentials: "include",
             body: formData,
           }
         );
