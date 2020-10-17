@@ -159,6 +159,15 @@ const deletePage = async (req, res, next) => {
         await user.save();
       }
 
+      // Delete images folder too (if exists)
+      const dir = `images/${pageId}`;
+      fs.access(dir, (err) => {
+        // If there is no error, the folder does exist
+        if (!err && dir !== "images/") {
+          fs.rmdirSync(dir, { recursive: true });
+        }
+      });
+
       res.status(200).json({
         message: "Deleted page successfully.",
       });
