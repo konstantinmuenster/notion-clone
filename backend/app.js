@@ -71,7 +71,11 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 
 app.use(
-  multer({ storage: fileStorage, fileFilter: fileFilter }).single("image")
+  multer({
+    storage: fileStorage,
+    limits: { fileSize: 1024 * 1024 * 5 }, // 5MB
+    fileFilter: fileFilter,
+  }).single("image")
 );
 
 app.use("/images", express.static(path.join(__dirname, "images")));
