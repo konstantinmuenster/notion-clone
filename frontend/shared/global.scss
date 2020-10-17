@@ -39,24 +39,30 @@ h1 {
 h2 {
   font-size: 1.5rem;
   margin-top: 0;
-  margin-bottom: .25rem;
+  margin-bottom: 0.25rem;
 }
 
 h3 {
   font-size: 1.25rem;
   margin-top: 0;
-  margin-bottom: .125rem;
+  margin-bottom: 0.125rem;
+}
+
+h4 {
+  font-size: 1.125rem;
+  margin-top: 0;
+  margin-bottom: 0.25rem;
 }
 
 p {
   font-size: 1rem;
   margin-top: 0;
-  margin-bottom: .125rem;
+  margin-bottom: 0.125rem;
 }
 
 a {
-    color: inherit;
-    text-decoration: none;
+  color: inherit;
+  text-decoration: none;
 }
 
 h1.pageHeading {
@@ -74,7 +80,7 @@ form {
     background: $secondary;
     color: $primary;
     border: none;
-    border-radius: .5rem;
+    border-radius: 0.5rem;
     color: $primary;
     font-family: $accent;
     font-size: 1rem;
@@ -84,7 +90,8 @@ form {
     background: $primary;
     color: #ffffff;
   }
-  button:hover, button:focus {
+  button:hover,
+  button:focus {
     cursor: pointer;
   }
 }

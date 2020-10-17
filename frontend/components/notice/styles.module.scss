@@ -1,6 +1,7 @@
 .notice {
+  position: relative;
   width: calc(100% - 1rem);
-  padding: 2rem 1rem;
+  padding: 2rem 3rem 2rem 1rem;
   border-radius: 0.5rem;
   background: #fffaf0;
   color: #975a16;
@@ -10,15 +11,40 @@
 }
 
 .errorNotice {
-  background: #fed7d7;
+  background: #ffe6e6;
   color: #9b2c2c;
 }
 
 .successNotice {
-  background: #c6f6d5;
+  background: #e5ffe5;
   color: #276749;
 }
 
 .miniNotice {
   padding: 1rem;
+}
+
+.dismiss {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  img {
+    width: 100%;
+    max-width: 1rem;
+    height: 100%;
+    max-height: 1rem;
+  }
+}
+
+.dismiss:hover {
+  cursor: pointer;
+}
+
+.notDisplayed {
+  display: none;
 }

@@ -25,7 +25,10 @@ export const getServerSideProps = async (context) => {
       }),
     });
     const data = await response.json();
-    res.writeHead(302, { Location: `/p/${data.pageId}` });
+    const pageId = data.pageId;
+    const creator = data.creator;
+    const query = !creator ? "?public=true" : ""; // needed to show notice
+    res.writeHead(302, { Location: `/p/${pageId}${query}` });
     res.end();
     return { props: {} };
   } catch (err) {
