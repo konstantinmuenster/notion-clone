@@ -1,5 +1,6 @@
 import { useContext, useState } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
 
 import { UserStateContext } from "../../context/UserContext";
 
@@ -32,6 +33,11 @@ const Layout = ({ children }) => {
 
   return (
     <div id="layoutRoot">
+      <Head>
+        <title>Notion Clone</title>
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+      </Head>
       <header className={styles.headerBar}>
         <div className={styles.logo}>
           <a href="/" role="link" tabIndex="0">
