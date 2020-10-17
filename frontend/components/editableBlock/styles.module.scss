@@ -2,6 +2,9 @@
 
 .block {
   padding: 0.25rem;
+  // Better support for safari
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .block:focus,
