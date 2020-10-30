@@ -5,7 +5,7 @@ import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import EditableBlock from "../editableBlock";
 import Notice from "../notice";
 import { usePrevious } from "../../hooks";
-import { objectId, setCaretPosition } from "../../utils";
+import { objectId, setCaretToEnd } from "../../utils";
 
 // A page is represented by an array containing several blocks
 // [
@@ -87,8 +87,7 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
         `[data-position="${lastBlockPosition}"]`
       );
       if (lastBlock) {
-        setCaretPosition(lastBlock);
-        lastBlock.focus();
+        setCaretToEnd(lastBlock);
       }
     }
   }, [blocks, prevBlocks, currentBlockId]);

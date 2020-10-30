@@ -5,11 +5,9 @@ import styles from "./styles.module.scss";
 import TagSelectorMenu from "../tagSelectorMenu";
 import ActionMenu from "../actionMenu";
 import DragHandleIcon from "../../images/draggable.svg";
-import {
-  setCaretPosition,
-  getSelectionPositions,
-  getCaretCoordinates,
-} from "../../utils";
+import { setCaretToEnd, getCaretCoordinates, getSelection } from "../../utils";
+
+const CMD_KEY = "/";
 
 // library does not work with hooks
 class EditableBlock extends React.Component {
@@ -19,6 +17,7 @@ class EditableBlock extends React.Component {
     this.handleFocus = this.handleFocus.bind(this);
     this.handleBlur = this.handleBlur.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
+    this.handleKeyUp = this.handleKeyUp.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
     this.handleDragHandleClick = this.handleDragHandleClick.bind(this);
     this.openActionMenu = this.openActionMenu.bind(this);
@@ -37,6 +36,7 @@ class EditableBlock extends React.Component {
     this.contentEditable = React.createRef();
     this.fileInput = null;
     this.state = {
+      htmlBackup: null,
       html: "",
       tag: "p",
       imageUrl: "",
@@ -137,8 +137,11 @@ class EditableBlock extends React.Component {
   }
 
   handleKeyDown(e) {
-    if (e.key === "/") {
-      this.openTagSelectorMenu("KEY_CMD");
+    if (e.key === CMD_KEY) {
+      // If the user starts to enter a command, we store a backup copy of
+      // the html. We need this to restore a clean version of the content
+      // after the content type selection was finished.
+      this.setState({ htmlBackup: this.state.html });
     } else if (e.key === "Backspace" && !this.state.html) {
       this.props.deleteBlock({ id: this.props.id });
     } else if (
@@ -162,9 +165,17 @@ class EditableBlock extends React.Component {
     this.setState({ previousKey: e.key });
   }
 
+  // The openTagSelectorMenu function needs to be invoked on key up. Otherwise
+  // the calculation of the caret coordinates does not work properly.
+  handleKeyUp(e) {
+    if (e.key === CMD_KEY) {
+      this.openTagSelectorMenu("KEY_CMD");
+    }
+  }
+
   handleMouseUp() {
     const block = this.contentEditable.current;
-    const { selectionStart, selectionEnd } = getSelectionPositions(block);
+    const { selectionStart, selectionEnd } = getSelection(block);
     if (selectionStart !== selectionEnd) {
       this.openActionMenu(block, "TEXT_SELECTION");
     }
@@ -211,6 +222,7 @@ class EditableBlock extends React.Component {
   closeTagSelectorMenu() {
     this.setState({
       ...this.state,
+      htmlBackup: null,
       tagSelectorMenuPosition: { x: null, y: null },
       tagSelectorMenuOpen: false,
     });
@@ -231,18 +243,9 @@ class EditableBlock extends React.Component {
       });
     } else {
       if (this.state.isTyping) {
-        // Identifying the command position is a bit harder since an html tag
-        // like </h2> is also a valid syntax for a command. Therefore, we have
-        // to look for anything like /h2 which is not an html tag
-        // Not perfect... anyways
-        const slashPosition = /(?![^<]*>)\/+[a-z0-9]*/gm.exec(this.state.html);
-        const htmlWithoutCmd = this.state.html.substring(
-          0,
-          slashPosition.index
-        );
-        this.setState({ ...this.state, tag: tag, html: htmlWithoutCmd }, () => {
-          setCaretPosition(this.contentEditable.current);
-          this.contentEditable.current.focus();
+        // Update the tag and restore the html backup without the command
+        this.setState({ tag: tag, html: this.state.htmlBackup }, () => {
+          setCaretToEnd(this.contentEditable.current);
           this.closeTagSelectorMenu();
         });
       } else {
@@ -301,12 +304,8 @@ class EditableBlock extends React.Component {
   calculateActionMenuPosition(parent, initiator) {
     switch (initiator) {
       case "TEXT_SELECTION":
-        const { selectionStart, selectionEnd } = getSelectionPositions(parent);
-        const { x: endX, y: endY } = getCaretCoordinates(parent, selectionEnd);
-        const { x: startX, y: startY } = getCaretCoordinates(
-          parent,
-          selectionStart
-        );
+        const { x: endX, y: endY } = getCaretCoordinates(false); // fromEnd
+        const { x: startX, y: startY } = getCaretCoordinates(true); // fromStart
         const middleX = startX + (endX - startX) / 2;
         return { x: middleX, y: startY };
       case "DRAG_HANDLE_CLICK":
@@ -322,15 +321,10 @@ class EditableBlock extends React.Component {
   // If the user types the "/" command, the tag selector menu should be display above
   // If it is triggered by the action menu, it should be positioned relatively to its initiator
   calculateTagSelectorMenuPosition(initiator) {
-    const block = this.contentEditable.current;
     switch (initiator) {
       case "KEY_CMD":
-        const { selectionEnd } = getSelectionPositions(block);
-        const { x: caretX, y: caretY } = getCaretCoordinates(
-          block,
-          selectionEnd
-        );
-        return { x: caretX, y: caretY };
+        const { x: caretLeft, y: caretTop } = getCaretCoordinates(true);
+        return { x: caretLeft, y: caretTop };
       case "ACTION_MENU":
         const { x: actionX, y: actionY } = this.state.actionMenuPosition;
         return { x: actionX - 40, y: actionY };
@@ -375,6 +369,7 @@ class EditableBlock extends React.Component {
                   onFocus={this.handleFocus}
                   onBlur={this.handleBlur}
                   onKeyDown={this.handleKeyDown}
+                  onKeyUp={this.handleKeyUp}
                   onMouseUp={this.handleMouseUp}
                   tagName={this.state.tag}
                   className={[
