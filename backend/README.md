@@ -1,29 +1,23 @@
 # notion-clone backend
 
-### Stack
-Backend: Node.js, Express.js, MongoDB, Mongoose, JWT
-
 ### Endpoints
-- blocks (GET, POST, PUT, DELETE)
-- users (GET, POST, PUT, DELETE)
-- pages (GET, POST, PUT, DELETE)
 
-### /blocks
-- id
-- type: h1, h2, h3, p, divider, image
-- content: html or imageUrl
-- user: refId 
+#### /users
 
-### /users
-- id
-- username
-- email
-- password
-- pages: list of pageIds
+- POST */users/signup* 
+- POST */users/login* 
+- POST */users/logout* 
+- GET */users/account* 
+- POST */users/resetToken* 
+- POST */users/resetPassword* 
+- POST */users/activate* 
 
-### /pages
-- id
-- page name
-- pagePath
-- userId
-- blocks: ordered list of blocks
+#### /pages
+
+- GET */pages*
+- GET */pages/:pageId*
+- POST */pages*
+- PUT */pages/:pageId*
+- DELETE */pages/:pageId*
+- POST */images*
+- DELETE */images/:imageName*
