@@ -86,7 +86,12 @@ const Layout = ({ children }) => {
       <footer className={styles.footerBar}>
         <hr className={styles.hr} />
         <div className={styles.github}>
-          <a href="/" rel="noopener noreferrer" role="link" tabIndex="0">
+          <a
+            href="https://github.com/konstantinmuenster/notion-clone"
+            rel="noopener noreferrer"
+            role="link"
+            tabIndex="0"
+          >
             <img src={GithubIcon} alt="Github Icon" />
           </a>
         </div>
