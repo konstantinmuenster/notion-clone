@@ -6,9 +6,18 @@ const usersController = require("../controllers/users");
 
 const router = express.Router();
 
-const emailValidator = body("email").isEmail().normalizeEmail();
-const passwordValidator = body("password").trim().isLength({ min: 6 });
-const nameValidator = body("name").trim().notEmpty();
+const emailValidator = body("email")
+  .isEmail()
+  .normalizeEmail()
+  .withMessage("Email Address is not valid.");
+const passwordValidator = body("password")
+  .trim()
+  .isLength({ min: 6 })
+  .withMessage("Password has to be 6 chars or more.");
+const nameValidator = body("name")
+  .trim()
+  .notEmpty()
+  .withMessage("Name is required.");
 
 // POST /users/signup
 router.post(

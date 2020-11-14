@@ -20,9 +20,10 @@ const signup = async (req, res, next) => {
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      const err = new Error("Input validation failed.");
+      const errArray = errors.array();
+      const err = new Error(errArray[0].msg);
       err.statusCode = 422;
-      err.data = errors.array();
+      err.data = errArray;
       throw err;
     }
 
