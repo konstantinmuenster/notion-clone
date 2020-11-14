@@ -146,16 +146,18 @@ const EditablePage = ({ id, fetchedBlocks, err }) => {
   };
 
   const deleteBlockHandler = (currentBlock) => {
-    setCurrentBlockId(currentBlock.id);
-    const index = blocks.map((b) => b._id).indexOf(currentBlock.id);
-    const deletedBlock = blocks[index];
-    const updatedBlocks = [...blocks];
-    updatedBlocks.splice(index, 1);
-    setBlocks(updatedBlocks);
-    // If the deleted block was an image block, we have to delete
-    // the image file on the server
-    if (deletedBlock.tag === "img" && deletedBlock.imageUrl) {
-      deleteImageOnServer(deletedBlock.imageUrl);
+    if (blocks.length > 1) {
+      setCurrentBlockId(currentBlock.id);
+      const index = blocks.map((b) => b._id).indexOf(currentBlock.id);
+      const deletedBlock = blocks[index];
+      const updatedBlocks = [...blocks];
+      updatedBlocks.splice(index, 1);
+      setBlocks(updatedBlocks);
+      // If the deleted block was an image block, we have to delete
+      // the image file on the server
+      if (deletedBlock.tag === "img" && deletedBlock.imageUrl) {
+        deleteImageOnServer(deletedBlock.imageUrl);
+      }
     }
   };
 
