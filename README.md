@@ -4,7 +4,9 @@
 
 This clone tries to replicate some of the great note-taking features Notion has. If you don't know [Notion.so](https://notion.so) yet, I highly recommend to check it out!
 
-👋 Live Demo: [notion-clone.kmuenster.com](https://notion-clone.kmuenster.com/)
+📌 Live Demo: [notion-clone.kmuenster.com](https://notion-clone.kmuenster.com/)
+
+📌 Medium Article: [How To Build A Text Editor Like Notion](https://medium.com/swlh/how-to-build-a-text-editor-like-notion-c510aedfdfcc)
 
 ---
 
