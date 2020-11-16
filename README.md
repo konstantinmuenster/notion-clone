@@ -50,23 +50,22 @@ Express.js · MongoDB with Mongoose · Nodemailer · JWT (Cookie-based)
    Backend: Create an `.env` file in the `backend` directory:
 
    ```
-   FRONTEND_URL=http://localhost:3000
-   DOMAIN=localhost
-   JWT_KEY=yourSecretForTokenGeneration
+   FRONTEND_URL="http://localhost:3000"
+   DOMAIN="localhost"
+   JWT_KEY="yourSecretForTokenGeneration"
    PORT=8080
-   DB_USER=mongoDbUser
-   DB_PW=mongoDbPassword
-   MAIL_HOST=iUseSendGridForThis
+   MONGO_URI="mongodb+srv://username:password@cluster.gqqwp.gcp.mongodb.net/database?retryWrites=true&w=majority"
+   MAIL_HOST="smtp.sendgrid.net"
    MAIL_PORT=465
-   MAIL_USER=apikey
-   MAIL_PASSWORD=yourSendGridApiKey
-   MAIL_SENDER=yourSender
+   MAIL_USER="apiKey"
+   MAIL_SENDER="Your Name <your@mail.com>"
+   MAIL_PASSWORD="yourSendGridApiKey"
    ```
 
    Frontend: Create an `.env.local` file in the `frontend` directory:
 
    ```
-   NEXT_PUBLIC_API=http://localhost:8080
+   NEXT_PUBLIC_API="http://localhost:8080"
    ```
 
 3. **Install and run backend (http://localhost:8080)**
