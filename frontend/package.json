@@ -14,7 +14,7 @@
   "dependencies": {
     "isomorphic-dompurify": "^0.7.0",
     "match-sorter": "^4.2.0",
-    "next": "^9.5.2",
+    "next": "^9.5.5",
     "next-cookies": "^2.0.3",
     "next-images": "^1.4.1",
     "react": "^16.13.1",
