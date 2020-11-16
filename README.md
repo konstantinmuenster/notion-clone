@@ -44,8 +44,32 @@ Express.js · MongoDB with Mongoose · Nodemailer · JWT (Cookie-based)
     git clone https://github.com/konstantinmuenster/notion-clone.git
     cd notion-clone
    ```
+   
+2. **Add environment variables**
 
-2. **Install and run backend (http://localhost:8080)**
+   Backend: Create an `.env` file in the `backend` directory:
+
+   ```
+   FRONTEND_URL=http://localhost:3000
+   DOMAIN=localhost
+   JWT_KEY=yourSecretForTokenGeneration
+   PORT=8080
+   DB_USER=mongoDbUser
+   DB_PW=mongoDbPassword
+   MAIL_HOST=iUseSendGridForThis
+   MAIL_PORT=465
+   MAIL_USER=apikey
+   MAIL_PASSWORD=yourSendGridApiKey
+   MAIL_SENDER=yourSender
+   ```
+
+   Frontend: Create an `.env.local` file in the `frontend` directory:
+
+   ```
+   NEXT_PUBLIC_API=http://localhost:8080
+   ```
+
+3. **Install and run backend (http://localhost:8080)**
 
     ```sh
     cd backend
@@ -53,7 +77,7 @@ Express.js · MongoDB with Mongoose · Nodemailer · JWT (Cookie-based)
     npm start
     ```
 
-3. **Install and run frontend (http://localhost:3000)**
+4. **Install and run frontend (http://localhost:3000)**
 
     ```sh
     cd frontend
