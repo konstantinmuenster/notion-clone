@@ -240,6 +240,15 @@ class EditableBlock extends React.Component {
           // Open the native file picker
           this.fileInput.click();
         }
+        // Add new block so that the user can continue writing
+        // after adding an image
+        this.props.addBlock({
+          id: this.props.id,
+          html: "",
+          tag: "p",
+          imageUrl: "",
+          ref: this.contentEditable.current,
+        });
       });
     } else {
       if (this.state.isTyping) {
@@ -397,12 +406,21 @@ class EditableBlock extends React.Component {
                   ].join(" ")}
                 >
                   <input
+                    id={`${this.props.id}_fileInput`}
                     name={this.state.tag}
-                    className={styles.fileInput}
                     type="file"
                     onChange={this.handleImageUpload}
                     ref={(ref) => (this.fileInput = ref)}
+                    hidden
                   />
+                  {!this.state.imageUrl && (
+                    <label
+                      htmlFor={`${this.props.id}_fileInput`}
+                      className={styles.fileInputLabel}
+                    >
+                      No Image Selected. Click To Select.
+                    </label>
+                  )}
                   {this.state.imageUrl && (
                     <img
                       src={
