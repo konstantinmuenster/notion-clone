@@ -24,6 +24,7 @@ router.post(
   "/signup",
   [emailValidator, passwordValidator, nameValidator],
   usersController.signup
+  
 );
 
 // POST /users/login
