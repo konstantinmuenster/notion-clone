@@ -91,10 +91,27 @@ app.use((err, req, res, next) => {
   res.status(status).json({ message: message, errCode: status, data: data });
 });
 
-mongoose
-  .connect(`${process.env.MONGO_URI}`, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then((res) => app.listen(process.env.PORT || 8080))
-  .catch((err) => console.log(err));
+// ---- CHECKING SERVER STATUS ---
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`**** SERVER STARTED AT PORT ${PORT} ****`);
+});
+
+// ----- CHECKING IF CONNECTED WITH DATABASE OR CATCH & DISPLAY ERRORS ----
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+const db = mongoose.connection;
+
+db.on("error", (err) => {
+  console.log(`**** SOMETHING WENT WRONG **** `);
+  console.log(`**** UNABLE TO CONNECT WITH DATABASE ****`);
+  console.log(`\n ${err}`);
+});
+
+db.once("open", () => {
+  console.log("**** CONNECTED WITH DATABASE SUCCESSFULLY ****");
+});
