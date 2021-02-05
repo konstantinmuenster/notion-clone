@@ -5,20 +5,20 @@ import cookies from "next-cookies";
 
 const LogoutPage = () => {
   useEffect(() => {
-    const router = useRouter;
     const logoutOnServer = async () => {
+      const router = useRouter;
       try {
         await fetch(`${process.env.NEXT_PUBLIC_API}/users/logout`, {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
         });
+        router.push("/login");
       } catch (err) {
         console.log(err);
       }
     };
     logoutOnServer();
-    router.push("/login");
   }, []);
   return null;
 };
