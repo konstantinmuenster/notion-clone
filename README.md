@@ -65,7 +65,7 @@ Express.js · MongoDB with Mongoose · Nodemailer · JWT (Cookie-based)
    Frontend: Create an `.env.local` file in the `frontend` directory:
 
    ```
-   NEXT_PUBLIC_API="http://localhost:8080"
+   NEXT_PUBLIC_API="http://localhost:8080" // references your Backend API endpoint
    ```
 
 3. **Install and run backend (http://localhost:8080)**
@@ -83,6 +83,52 @@ Express.js · MongoDB with Mongoose · Nodemailer · JWT (Cookie-based)
     npm install
     npm run dev
     ```
+
+## Hosting
+
+You can host the application on almost any provider that supports Node applications and custom domains. I decided to host the frontend on [vercel.com](https://vercel.com) and the backend on [heroku.com](https://heroku.com). But you can host both, frontend and backend, on the same provider if you like to.
+
+### MongoDB Atlas
+
+You have to create a new MongoDB cluster upfront. It will store all of your page and block data. You can create one for free on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
+
+**Make sure**, you create the following collections:
+* pages
+* users
+
+**Make sure**, you allow network access to everyone (due to Heroku).
+
+### Backend
+
+If you want to deploy the backend on [heroku.com](https://heroku.com), create a new app in your preferred region on heroku.com.
+
+**Make sure**, you add all production environmental variables for the backend. You can see which variables are needed in the Installation part of this readme.
+
+**Make sure**, you add a custom domain for your backend API. Since the application uses a Cookie-based authentication, we have to run backend and frontend on the same domain. I, for example, run the frontend on `www.notion-clone.kmuenster.com` and the backend on `api.notion-clone.kmuenster.com`.
+
+> **Want to run scheduled jobs?** To delete inactive pages and users, I run scheduled jobs frequently. If you want this feature as well, you have to add more dynos to your application and run the job `$ node jobs/index.js` via Heroku Scheduler.
+
+Lastly, you can deploy your app using Heroku Git. 
+
+**Make sure**, that when you push the backend to Heroku, you make a Git subtree push since `notion-clone` is a mono-repo containing backend and frontend. So run `git subtree push --prefix backend heroku master` instead of `git push heroku master`. Thus, we only push the backend part.
+
+### Frontend
+
+If you want to deploy the frontend on [vercel.com](https://vercel.com), you can so easily using the Vercel CLI.
+
+With the Vercel CLI, we don't have to make a subtree push, instead we can just switch to the frontend folder and run the `vercel` command to deploy:
+
+```sh
+cd frontend
+vercel
+```
+
+This will lead you through the setup guide for your frontend application. Afterwards the app should be successfully deployed.
+
+**Make sure**, you add the Backend API endpoint as a production environmental variable on Vercel.com.
+
+**Make sure**, you add a custom domain for your frontend (that ideally matches the domain which you have specified in your backend environmental variables 😉)
+
 
 ## About
 
